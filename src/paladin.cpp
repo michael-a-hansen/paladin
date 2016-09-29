@@ -337,26 +337,26 @@ extern "C" void dgeev_(
 // parsing command line options
 class CommandLineParser{
 protected:
-  std::vector<std::string> tokens;
+  StrVecT pieces;
 public:
   CommandLineParser( const int argc, char *argv[] )
 {
     for( int i=1; i<argc; ++i )
-      this->tokens.push_back( std::string( argv[i] ) );
+      this->pieces.push_back( std::string( argv[i] ) );
 }
 
 
   bool checkExists( const std::string& name ) const
   {
-    return std::find( this->tokens.begin(), this->tokens.end(), name ) != this->tokens.end();
+    return std::find( pieces.begin(), pieces.end(), name ) != pieces.end();
   }
 
   std::string getValue( const std::string& name, const std::string& defaultStr ) const
   {
     if( this->checkExists( name ) ){
       std::vector<std::string>::const_iterator itr;
-      itr = std::find( this->tokens.begin(), this->tokens.end(), name );
-      if (itr != this->tokens.end() && ++itr != this->tokens.end()){
+      itr = std::find( pieces.begin(), pieces.end(), name );
+      if (itr != pieces.end() && ++itr != pieces.end()){
         return *itr;
       }
       else return defaultStr;
@@ -391,8 +391,6 @@ int main( int argc, char *argv[] )
   std::vector<std::string> allFlockPaths, pod;
   std::vector<int> podColors;
   int flockSize;
-
-
   bool showPods = false;
   int numRuns = 1;
 
@@ -402,14 +400,9 @@ int main( int argc, char *argv[] )
     CommandLineParser clp( argc, argv );
 
     std::string flockPath = clp.getValue( "-flock", "no-flock-provided!" );
-    std::string measureString = clp.getValue( "-load-measure", "dcb" );
+    std::string measureString = clp.getValue( "-load-measure", "nnz" );
     numRuns = std::stoi( clp.getValue( "-timing-repeats", "1" ) );
     showPods = clp.checkExists( "-show-pods" );
-
-    // flock
-    // load-measure
-    // show-pods
-    // timing-repeats
 
     MeasureType type = string_to_measure_type( measureString );
 

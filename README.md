@@ -7,3 +7,5 @@ Several load measures are provided to provide optimal performance across the ran
 
 Matrices must be provided in the matrix market exchange format of NIST (see http://math.nist.gov/MatrixMarket/formats.html).
 At the moment only general (dense), real, nonsymmetric (nothing special is done for symmetric) matrices are supported, although the extension to symmetric systems, for instance, would be straightforward.
+
+paladin = PArallel LApack DIstributor
