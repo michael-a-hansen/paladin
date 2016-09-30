@@ -135,13 +135,13 @@ void sort_spectrum( SpectrumT& s, std::string sortStr )
 
 void show_spectrum( SpectrumT s )
 {
-  for( int i=0; i<s.size(); ++i )
+  for( size_t i=0; i<s.size(); ++i )
     std::cout << "lambda_" << i << " = " << s[i].real() << " + " << s[i].imag() << "j" << std::endl;
 }
 
 void write_spectrum( SpectrumT s, std::ofstream& realout, std::ofstream& imagout )
 {
-  for( int i=0; i<s.size(); ++i ){
+  for( size_t i=0; i<s.size(); ++i ){
     realout << s[i].real() << std::endl;
     imagout << s[i].imag() << std::endl;
   }
@@ -169,8 +169,8 @@ struct SquareMatrix
   void print() const
   {
     std::cout << "[";
-    for( size_t i=0; i<nrows_; ++i ){
-      for( size_t j=0; j<nrows_; ++j )
+    for( int i=0; i<nrows_; ++i ){
+      for( int j=0; j<nrows_; ++j )
         std::cout << " " << mat_[i*nrows_+j] << ",";
       if( i==nrows_-1 ) std::cout << " ]" << std::endl;
       else              std::cout << std::endl;
@@ -435,7 +435,7 @@ int main( int argc, char *argv[] )
 
     // color matrices into pods
     std::vector<MeasureT> podMeasures( numRanks, 0 );
-    for( int i=0; i<flock.size(); ++i ){
+    for( size_t i=0; i<flock.size(); ++i ){
       int minPodIdx = std::distance( podMeasures.begin(), std::min_element( podMeasures.begin(), podMeasures.end() ) );
       podMeasures[minPodIdx] += flock[i].second;
       podColors.push_back( minPodIdx );
@@ -482,7 +482,7 @@ int main( int argc, char *argv[] )
     if( myRank == rank ){
       std::cout << "rank " << myRank << ": " << pod.size() << " matrices" << std::endl;
       if( showPods )
-        for( int i=0; i<pod.size(); ++i )
+        for( size_t i=0; i<pod.size(); ++i )
           std::cout << "    " << pod[i] << std::endl;
     }
     MPI_Barrier( MPI_COMM_WORLD ); // to get a contiguous list per pod
@@ -497,7 +497,7 @@ int main( int argc, char *argv[] )
   start = std::chrono::system_clock::now();
 
   for( int num=0; num<numRuns; ++num ){
-    for( int idx=0; idx<pod.size(); ++idx ){
+    for( size_t idx=0; idx<pod.size(); ++idx ){
       startRead = std::chrono::system_clock::now();
       SquareMatrix mat = read_matrix_from_mm_file( pod[idx] );
       endRead = std::chrono::system_clock::now();
