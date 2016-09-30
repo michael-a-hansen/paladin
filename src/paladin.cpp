@@ -47,7 +47,7 @@ typedef std::vector<EigT> SpectrumT;
 
 
 // to send a string from root to all other ranks
-void broadcast_string( std::string& str, int myRank, int numRanks, int rootRank = 0 )
+void broadcast_string( std::string& str, const int myRank, const int numRanks, const int rootRank = 0 )
 {
   if( myRank == rootRank ){
     for( int sendToRank=0; sendToRank<numRanks; ++sendToRank )
@@ -75,7 +75,7 @@ enum class MeasureType
   DIMCUBED
 };
 
-MeasureType string_to_measure_type( std::string& str )
+MeasureType string_to_measure_type( const std::string& str )
 {
   MeasureType type;
   if     ( str == "dim" ) type = MeasureType::DIMENSION;
@@ -85,7 +85,7 @@ MeasureType string_to_measure_type( std::string& str )
   return type;
 }
 
-std::string measure_type_description( MeasureType& type )
+std::string measure_type_description( const MeasureType& type )
 {
   std::string str;
   if     ( type == MeasureType::DIMENSION )   str = "matrix dimension";
@@ -120,7 +120,7 @@ struct LMag  : public EigenSorter { bool operator() ( const EigT& L, const EigT&
 struct SMag  : public EigenSorter { bool operator() ( const EigT& L, const EigT& R ) const { return ( std::norm( L ) < std::norm( R ) );} };
 
 
-void sort_spectrum( SpectrumT& s, std::string sortStr )
+void sort_spectrum( SpectrumT& s, const std::string sortStr )
 {
   EigenSorter* sorter;
   if     ( sortStr == "SM" ) sorter = new SMag;
@@ -133,13 +133,13 @@ void sort_spectrum( SpectrumT& s, std::string sortStr )
   std::sort( s.begin(), s.end(), std::ref( *sorter ) );
 }
 
-void show_spectrum( SpectrumT s )
+void show_spectrum( const SpectrumT& s )
 {
   for( size_t i=0; i<s.size(); ++i )
     std::cout << "lambda_" << i << " = " << s[i].real() << " + " << s[i].imag() << "j" << std::endl;
 }
 
-void write_spectrum( SpectrumT s, std::ofstream& realout, std::ofstream& imagout )
+void write_spectrum( const SpectrumT& s, std::ofstream& realout, std::ofstream& imagout )
 {
   for( size_t i=0; i<s.size(); ++i ){
     realout << s[i].real() << std::endl;
@@ -153,15 +153,15 @@ void write_spectrum( SpectrumT s, std::ofstream& realout, std::ofstream& imagout
 // 1-based indexing because matrix market input uses 1-based indexing
 struct SquareMatrix
 {
-  int nrows_, nelem_;
+  const int nrows_, nelem_;
   DVecT mat_;
 
   SquareMatrix( const int nrows ) : nrows_( nrows ), nelem_( nrows*nrows ), mat_( nelem_, 0.0 ) {}
 
   // one-based indexing
-  int idx1D( const int i, const int j ) { return (i-1)*nrows_+(j-1);}
-  double& operator()( int idx )      { return mat_[idx-1];}
-  double& operator()( int i, int j ) { return mat_[idx1D(i,j)];}
+  int idx1D( const int i, const int j ) const { return (i-1)*nrows_+(j-1);}
+  double& operator()( const int idx )      { return mat_[idx-1];}
+  double& operator()( const int i, const int j ) { return mat_[idx1D(i,j)];}
 
   // setting based on a 'triple'
   void set_element( const int i, const int j, const double aij ) { (*this)( i, j ) = aij;}
@@ -250,7 +250,7 @@ int count_nonempty_lines( const std::string& filename )
   return count_nonempty_lines( std::ifstream( filename.c_str() ) );
 }
 
-int read_matrix_dimension_from_mm_file( std::string matrixPath )
+int read_matrix_dimension_from_mm_file( const std::string& matrixPath )
 {
   std::ifstream file( matrixPath );
   if( !file ){std::cerr << "Couldn't open the file, exiting!" << std::endl; exit(1);}
@@ -266,7 +266,7 @@ int read_matrix_dimension_from_mm_file( std::string matrixPath )
   return nrows;
 }
 
-int read_matrix_nnzeros_from_mm_file( std::string matrixPath )
+int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath )
 {
   std::ifstream file( matrixPath );
   if( !file ){std::cerr << "Couldn't open the file, exiting!" << std::endl; exit(1);}
@@ -283,7 +283,8 @@ int read_matrix_nnzeros_from_mm_file( std::string matrixPath )
   return nnz;
 }
 
-MeasureT obtain_matrix_measure( std::string matrixPath, MeasureType type = MeasureType::DIMENSION )
+MeasureT obtain_matrix_measure( const std::string& matrixPath,
+                                const MeasureType& type = MeasureType::DIMENSION )
 {
   MeasureT measure = 0;
   MeasureT dim = ( MeasureT ) read_matrix_dimension_from_mm_file( matrixPath );
@@ -299,7 +300,7 @@ MeasureT obtain_matrix_measure( std::string matrixPath, MeasureType type = Measu
   return measure;
 }
 
-SquareMatrix read_matrix_from_mm_file( std::string matrixPath )
+SquareMatrix read_matrix_from_mm_file( const std::string& matrixPath )
 {
   std::ifstream file( matrixPath );
   if( !file ){std::cerr << "Couldn't open the file, exiting!" << std::endl; exit(1);}
@@ -411,7 +412,7 @@ int main( int argc, char *argv[] )
     std::cout << std::endl << "--------------------------------" << std::endl << std::endl;
     std::cout << "MPI ranks     : " << numRanks << std::endl << std::endl;
     std::cout << "Flock listing : " << flockPath << std::endl << std::endl;
-    std::cout << "Matrices      : " << numMatrices << " (" << std::round( (double) numMatrices / (double) numRanks ) << "/rank)" << std::endl << std::endl;
+    std::cout << "Matrices      : " << numMatrices << std::endl << std::endl;
     std::cout << "Measure type  : " << measure_type_description( type ) << std::endl << std::endl;
     std::cout << "Timing runs   : " << numRuns << std::endl << std::endl;
     std::cout << "--------------------------------" << std::endl << std::endl;
@@ -445,8 +446,12 @@ int main( int argc, char *argv[] )
       std::cout << "rank " << rank << " load measure = " << podMeasures[rank] << std::endl;
 
     // print predicted load imbalance
-    const double minPodIdx = (double) podMeasures[ std::distance( podMeasures.begin(), std::min_element( podMeasures.begin(), podMeasures.end() ) ) ];
-    const double maxPodIdx = (double) podMeasures[ std::distance( podMeasures.begin(), std::max_element( podMeasures.begin(), podMeasures.end() ) ) ];
+    const double minPodIdx = static_cast<double>( podMeasures[ std::distance( podMeasures.begin(),
+                                                                              std::min_element( podMeasures.begin(),
+                                                                                                podMeasures.end() ) ) ] );
+    const double maxPodIdx = static_cast<double>( podMeasures[ std::distance( podMeasures.begin(),
+                                                                              std::max_element( podMeasures.begin(),
+                                                                                                podMeasures.end() ) ) ] );
     const double lifPred = ( maxPodIdx - minPodIdx ) / minPodIdx;
     std::cout << "predicted load imbalance = " << 100 * lifPred << "%" << std::endl << std::endl;
   }
@@ -544,8 +549,8 @@ int main( int argc, char *argv[] )
 
   // display timings
   std::chrono::duration<double> elapsed_seconds = end - start;
-  double localRunTime = elapsed_seconds.count() / (double) numRuns;
-  localReadRunTime = localReadRunTime / (double) numRuns;
+  double localRunTime = elapsed_seconds.count() / static_cast<double>( numRuns );
+  localReadRunTime = localReadRunTime / static_cast<double>( numRuns );
 
   std::cout << "rank " << myRank << ": total cputime = " << localRunTime << " s averaged over " << numRuns << " runs" << std::endl
             << "cputime on matrix input: " << localReadRunTime << " s (" << 100.0 * localReadRunTime / localRunTime << "%)" << std::endl << std::endl;
