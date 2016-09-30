@@ -55,7 +55,10 @@ namespace paladin
   {
     DIMENSION,
     NUMNONZEROS,
-    DIMCUBED
+    DIMCUBED,
+    NNZDIMSQRD,
+    SPARSITY,
+    SPARSENCUBED
   };
 
   /**
@@ -69,6 +72,9 @@ namespace paladin
     if     ( str == "dim" ) type = LoadPredictor::DIMENSION;
     else if( str == "nnz" ) type = LoadPredictor::NUMNONZEROS;
     else if( str == "dcb" ) type = LoadPredictor::DIMCUBED;
+    else if( str == "zds" ) type = LoadPredictor::NNZDIMSQRD;
+    else if( str == "sps" ) type = LoadPredictor::SPARSITY;
+    else if( str == "spc" ) type = LoadPredictor::SPARSENCUBED;
     else                    type = LoadPredictor::DIMCUBED;
     return type;
   }
@@ -81,10 +87,13 @@ namespace paladin
   std::string measure_type_description( const LoadPredictor& type )
   {
     std::string str;
-    if     ( type == LoadPredictor::DIMENSION )   str = "matrix dimension";
-    else if( type == LoadPredictor::NUMNONZEROS ) str = "number of nonzeros";
-    else if( type == LoadPredictor::DIMCUBED )    str = "matrix dimension cubed";
-    else                                          str = "matrix dimension";
+    if     ( type == LoadPredictor::DIMENSION )    str = "matrix dimension";
+    else if( type == LoadPredictor::NUMNONZEROS )  str = "number of nonzeros";
+    else if( type == LoadPredictor::DIMCUBED )     str = "matrix dimension cubed";
+    else if( type == LoadPredictor::NNZDIMSQRD )   str = "number nonzeros * dim squared";
+    else if( type == LoadPredictor::SPARSITY )     str = "matrix sparsity = nnz / dim / dim";
+    else if( type == LoadPredictor::SPARSENCUBED ) str = "sparsity * dim cubed";
+    else                                           str = "matrix dimension";
     return str;
   }
 
