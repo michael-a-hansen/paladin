@@ -131,8 +131,7 @@ public:
       std::cout << "Flock listing : " << flockPath_ << '\n';
       std::cout << "Matrices      : " << flockSize_ << '\n';
       std::cout << "Measure type  : " << measure_type_description( type_ ) << '\n';
-      std::cout << "Timing runs   : " << numRuns_ << '\n';
-      std::cout << "--------------------------------" << '\n' << '\n';
+      std::cout << "Timing runs   : " << numRuns_ << '\n' << '\n';
 
       // populate and sort the flock
       std::ifstream flockFile( flockPath_ );
@@ -196,7 +195,7 @@ public:
         if( showPods_ ){
           for( size_t i=0; i<pod.size(); ++i ){
             MeasureT measure = obtain_matrix_measure( pod[i], type_ );
-            std::cout << "    " << pod[i] << ", measure = " << measure << '\n';
+            printf( "%s%0.1e%s%s\n", "    ", measure, "   ", pod[i].c_str() );
           }
         }
       }
