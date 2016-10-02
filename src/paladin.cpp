@@ -146,15 +146,16 @@ public:
       }
       sort_name_measure_pairs( flock );
       allFlockPaths.resize( flockSize_ );
+
       for( int i=0; i<flockSize_; ++i ){
         allFlockPaths[i] = flock[i].first;
       }
 
       // color matrices into pods
       std::vector<MeasureT> podMeasures( comm.numRanks, 0 );
-      for( size_t i=0; i<flock.size(); ++i ){
+      for( auto f : flock ){
         int minPodIdx = std::distance( podMeasures.begin(), std::min_element( podMeasures.begin(), podMeasures.end() ) );
-        podMeasures[minPodIdx] += flock[i].second;
+        podMeasures[minPodIdx] += f.second;
         podColors.push_back( minPodIdx );
       }
     }
@@ -170,10 +171,10 @@ public:
     MPI_Bcast( &podColors[0], flockSize_, MPI_INT, 0, MPI_COMM_WORLD );
 
     // distribute the flock vector, one string at a time...
-    for( int i=0; i<flockSize_; ++i ){
-      std::string str = allFlockPaths[i];
+    for( auto &f : allFlockPaths ){
+      std::string str = f;
       broadcast_string( str, comm.myRank, comm.numRanks );
-      allFlockPaths[i] = str;
+      f = str;
     }
 
     // assign pods by color
@@ -193,9 +194,9 @@ public:
       if( comm.myRank == rank ){
         std::cout << "rank " << comm.myRank << ": " << pod.size() << " matrices" << '\n';
         if( showPods_ ){
-          for( size_t i=0; i<pod.size(); ++i ){
-            MeasureT measure = obtain_matrix_measure( pod[i], type_ );
-            printf( "%s%0.1e%s%s\n", "    ", measure, "   ", pod[i].c_str() );
+          for( auto p : pod ){
+            MeasureT measure = obtain_matrix_measure( p, type_ );
+            printf( "%s%0.1e%s%s\n", "    ", measure, "   ", p.c_str() );
           }
         }
       }
@@ -214,11 +215,11 @@ public:
     localReadRunTime_ = 0.0;
     start = std::chrono::system_clock::now();
 
-    for( size_t idx=0; idx<pod.size(); ++idx ){
+    for( auto p : pod ){
       bool firstRunOfPod = true;
       for( int num=0; num<numRuns_; ++num ){
         startRead = std::chrono::system_clock::now();
-        SquareMatrix mat = read_matrix_from_mm_file( pod[idx] );
+        SquareMatrix mat = read_matrix_from_mm_file( p );
         endRead = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = endRead - startRead;
         localReadRunTime_ += elapsed_seconds.count();
