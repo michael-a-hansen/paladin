@@ -1,5 +1,5 @@
 SET( SOURCES
-     paladin.cpp )
+     compute-and-show-timings.cpp )
 
 FIND_PACKAGE( MPI REQUIRED )
 
@@ -26,5 +26,5 @@ ELSE()
 ENDIF()
 
 
-ADD_EXECUTABLE( paladin paladin.cpp )
-TARGET_LINK_LIBRARIES( paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
+ADD_EXECUTABLE( compute-and-show-timings compute-and-show-timings.cpp )
+TARGET_LINK_LIBRARIES( compute-and-show-timings ${BLASLAPACK} ${MPI_LIBRARIES} )
