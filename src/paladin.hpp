@@ -72,6 +72,7 @@ namespace paladin
     int numRuns_, flockSize_;
     bool showPods_;
     LoadPredictor type_;
+    const MpiComm& comm_;
 
 
 
@@ -95,6 +96,7 @@ namespace paladin
   public:
 
     Paladin( int& argc, char *argv[], const MpiComm& comm )
+  : comm_( comm )
   {
       if( comm.amRoot ){
         CommandLineParser clp( argc, argv );
@@ -251,24 +253,24 @@ namespace paladin
 
     void write_eigenvalues() {} // TODO: write me!
 
-    void display_timings( const MpiComm& comm )
+    void display_timings()
     {
-      if( comm.amRoot ){
+      if( comm_.amRoot ){
         std::cout << '\n' << "Timings averaged over " << numRuns_ << " runs:" << '\n';
         std::cout << "                      runtimes (s)"   << '\t' << '\t' << '\t' << "  fractions" << '\n';
         std::cout <<         "        -----------------------------------------" << '\t' << "-------------" << '\n';
         std::cout << "rank" << '\t' << "read" << '\t' << '\t' << "eig." << '\t' << '\t' << "total" << '\t' << '\t' << "read" << '\t' << "eig." << '\n';
       }
-      comm.barrier();
+      comm_.barrier();
 
       const double readFrac = localReadRunTime_ / localRunTime_;
       const double eigFrac  = localEigRunTime_  / localRunTime_;
 
-      for( int rank=0; rank<comm.numRanks; ++rank ){
-        if( comm.myRank == rank ){
-          printf( "%i\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", comm.myRank, localReadRunTime_, localEigRunTime_, localRunTime_, readFrac, eigFrac );
+      for( int rank=0; rank<comm_.numRanks; ++rank ){
+        if( comm_.myRank == rank ){
+          printf( "%i\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", comm_.myRank, localReadRunTime_, localEigRunTime_, localRunTime_, readFrac, eigFrac );
         }
-        comm.barrier();
+        comm_.barrier();
       }
 
       double minRunTime    , maxRunTime    , totalRunTime;
@@ -284,8 +286,8 @@ namespace paladin
       MPI_Reduce( &localRunTime_    , &maxRunTime      , 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
       MPI_Reduce( &localRunTime_    , &totalRunTime    , 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
-      if( comm.amRoot ){
-        const double numRanks       = static_cast<double>( comm.numRanks );
+      if( comm_.amRoot ){
+        const double numRanks       = static_cast<double>( comm_.numRanks );
         const double avgReadRunTime = totalReadRunTime / numRanks;
         const double avgEigRunTime  = totalEigRunTime  / numRanks;
         const double avgRunTime     = totalRunTime     / numRanks;

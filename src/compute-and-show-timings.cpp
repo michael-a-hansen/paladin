@@ -36,7 +36,7 @@ int main( int argc, char *argv[] )
 
   roland.compute();
 
-  roland.display_timings( comm );
+  roland.display_timings();
 
   return 0;
 }
