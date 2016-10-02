@@ -82,8 +82,8 @@ namespace paladin
    */
   void show_spectrum( const SpectrumT& s )
   {
-    for( size_t i=0; i<s.size(); ++i )
-      std::cout << "lambda_" << i << " = " << s[i].real() << " + " << s[i].imag() << "j" << '\n';
+    for( auto eig : s )
+      std::cout << "lambda_" << i << " = " << eig.real() << " + " << eig.imag() << "j" << '\n';
   }
 
   /**
@@ -94,9 +94,9 @@ namespace paladin
    */
   void write_spectrum( const SpectrumT& s, std::ofstream& realout, std::ofstream& imagout )
   {
-    for( size_t i=0; i<s.size(); ++i ){
-      realout << s[i].real() << '\n';
-      imagout << s[i].imag() << '\n';
+    for( auto eig : s ){
+      realout << eig.real() << '\n';
+      imagout << eig.imag() << '\n';
     }
   }
 

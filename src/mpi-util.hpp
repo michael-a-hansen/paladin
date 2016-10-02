@@ -68,21 +68,21 @@ namespace paladin
    * @param numRanks the number of ranks
    * @param rootRank (optional) the index of the rootRank = 0 by default
    */
-  void broadcast_string( std::string& str, const int myRank, const int numRanks, const int rootRank = 0 )
+  void broadcast_string( std::string& str, const MpiComm& comm )
   {
-    if( myRank == rootRank ){
-      for( int sendToRank=0; sendToRank<numRanks; ++sendToRank )
-        if( sendToRank != rootRank )
+    if( comm.myRank == comm.rootRank ){
+      for( int sendToRank=0; sendToRank<comm.numRanks; ++sendToRank )
+        if( sendToRank != comm.rootRank )
           MPI_Send( str.c_str(), str.size(), MPI_CHAR, sendToRank, 0, MPI_COMM_WORLD );
     }
     else{
       MPI_Status status;
       int size;
-      MPI_Probe( rootRank, 0, MPI_COMM_WORLD, &status );
+      MPI_Probe( comm.rootRank, 0, MPI_COMM_WORLD, &status );
       MPI_Get_count( &status, MPI_CHAR, &size );
 
       std::vector<char> tmp( size );
-      MPI_Recv( tmp.data(), size, MPI_CHAR, rootRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+      MPI_Recv( tmp.data(), size, MPI_CHAR, comm.rootRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
       str.assign( tmp.begin(), tmp.end() );
     }
   }

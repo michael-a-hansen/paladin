@@ -153,7 +153,7 @@ namespace paladin
       // distribute the flock vector, one string at a time...
       for( auto &f : allFlockPaths ){
         std::string str = f;
-        broadcast_string( str, comm.myRank, comm.numRanks );
+        broadcast_string( str, comm );
         f = str;
       }
 
