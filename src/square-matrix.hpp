@@ -162,7 +162,7 @@ namespace paladin
   SquareMatrix read_matrix_from_mm_file( const std::string& matrixPath )
   {
     std::ifstream file( matrixPath );
-    if( !file ){std::cerr << "Couldn't open the file, exiting!" << '\n'; exit(1);}
+    if( !file ){std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n'; exit(1);}
     read_header( file );
     SquareMatrix A = allocate_matrix( file );
     A.read_matrix( file );
@@ -202,7 +202,7 @@ namespace paladin
   int read_matrix_dimension_from_mm_file( const std::string& matrixPath )
   {
     std::ifstream file( matrixPath );
-    if( !file ){std::cerr << "Couldn't open the file, exiting!" << '\n'; exit(1);}
+    if( !file ){std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n'; exit(1);}
     std::string line;
     std::getline( file, line );
     std::getline( file, line );
@@ -223,7 +223,7 @@ namespace paladin
   int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath )
   {
     std::ifstream file( matrixPath );
-    if( !file ){std::cerr << "Couldn't open the file, exiting!" << '\n'; exit(1);}
+    if( !file ){std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n'; exit(1);}
     std::string line;
     std::getline( file, line );
     std::getline( file, line );

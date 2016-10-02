@@ -115,6 +115,7 @@ namespace paladin
 
         // populate and sort the flock
         std::ifstream flockFile( flockPath_ );
+        if( !flockFile ){std::cerr << "Couldn't open the flock file, " << flockPath_ << ", exiting!" << '\n'; exit(1);}
         std::vector<NameMeasurePairT> flock;
         while( flockFile ){
           std::string matrixPath;
