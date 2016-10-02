@@ -50,7 +50,6 @@
 #include "square-matrix.hpp"
 #include "lapack-wrapper.hpp"
 #include "command-line-parser.hpp"
-#include "mpicomm.hpp"
 
 
 namespace paladin

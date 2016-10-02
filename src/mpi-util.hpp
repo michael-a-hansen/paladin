@@ -36,6 +36,31 @@
 namespace paladin
 {
 
+  struct MpiComm
+  {
+    int numRanks, myRank, rootRank;
+    bool amRoot;
+
+    MpiComm( int& argc, char *argv[] )
+    {
+      MPI_Init( &argc, &argv );
+      MPI_Comm_size( MPI_COMM_WORLD, &numRanks );
+      MPI_Comm_rank( MPI_COMM_WORLD, &myRank );
+      rootRank = 0;
+      amRoot = ( myRank == rootRank );
+    }
+
+    ~MpiComm()
+    {
+      MPI_Finalize();
+    }
+
+
+    void barrier() const { MPI_Barrier( MPI_COMM_WORLD );}
+  };
+
+
+
   /**
    * @brief convenience for MPI broadcasting a std::string
    * @param str a std::string to be broadcasted to slave ranks
