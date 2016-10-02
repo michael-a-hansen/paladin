@@ -82,8 +82,11 @@ namespace paladin
    */
   void show_spectrum( const SpectrumT& s )
   {
-    for( auto eig : s )
-      std::cout << "lambda_" << i << " = " << eig.real() << " + " << eig.imag() << "j" << '\n';
+    int idx = -1;
+    for( auto eig : s ){
+      ++idx;
+      std::cout << "lambda_" << idx << " = " << eig.real() << " + " << eig.imag() << "j" << '\n';
+    }
   }
 
   /**

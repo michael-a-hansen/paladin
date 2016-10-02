@@ -249,16 +249,19 @@ namespace paladin
     MeasureT measure = 0;
     MeasureT dim = ( MeasureT ) read_matrix_dimension_from_mm_file( matrixPath );
     MeasureT nnz = ( MeasureT ) read_matrix_nnzeros_from_mm_file( matrixPath );
-    switch( type ){
-      case LoadPredictor::DIMENSION:    measure = dim;             break;
-      case LoadPredictor::NUMNONZEROS:  measure = nnz;             break;
-      case LoadPredictor::DIMCUBED:     measure = dim * dim * dim; break;
-      case LoadPredictor::NNZDIMSQRD:   measure = dim * dim * nnz; break;
-      case LoadPredictor::SPARSITY:     measure = nnz / dim / dim; break;
-      case LoadPredictor::SPARSENCUBED: measure = nnz * dim;       break;
-      default:
-        std::cerr << "Invalid measure type given, exiting!" << '\n';
-        exit(1);
+    try {
+      switch( type ){
+        case LoadPredictor::DIMENSION:    measure = dim;             break;
+        case LoadPredictor::NUMNONZEROS:  measure = nnz;             break;
+        case LoadPredictor::DIMCUBED:     measure = dim * dim * dim; break;
+        case LoadPredictor::NNZDIMSQRD:   measure = dim * dim * nnz; break;
+        case LoadPredictor::SPARSITY:     measure = nnz / dim / dim; break;
+        case LoadPredictor::SPARSENCUBED: measure = nnz * dim;       break;
+        default: throw std::invalid_argument( "Invalid load type." );
+      }
+    }
+    catch( const std::invalid_argument& badarg ) {
+      std::cerr << "Invalid argument: " << badarg.what() << '\n';
     }
     return measure;
   }

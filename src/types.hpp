@@ -69,13 +69,18 @@ namespace paladin
   LoadPredictor string_to_measure_type( const std::string& str )
   {
     LoadPredictor type;
-    if     ( str == "dim" ) type = LoadPredictor::DIMENSION;
-    else if( str == "nnz" ) type = LoadPredictor::NUMNONZEROS;
-    else if( str == "dcb" ) type = LoadPredictor::DIMCUBED;
-    else if( str == "zds" ) type = LoadPredictor::NNZDIMSQRD;
-    else if( str == "sps" ) type = LoadPredictor::SPARSITY;
-    else if( str == "spc" ) type = LoadPredictor::SPARSENCUBED;
-    else                    type = LoadPredictor::DIMCUBED;
+    try{
+      if     ( str == "dim" ) type = LoadPredictor::DIMENSION;
+      else if( str == "nnz" ) type = LoadPredictor::NUMNONZEROS;
+      else if( str == "dcb" ) type = LoadPredictor::DIMCUBED;
+      else if( str == "zds" ) type = LoadPredictor::NNZDIMSQRD;
+      else if( str == "sps" ) type = LoadPredictor::SPARSITY;
+      else if( str == "spc" ) type = LoadPredictor::SPARSENCUBED;
+      else throw std::invalid_argument( "Invalid load string." );
+    }
+    catch( const std::invalid_argument& badarg ) {
+      std::cerr << "Invalid argument: " << badarg.what() << '\n';
+    }
     return type;
   }
 
@@ -87,13 +92,18 @@ namespace paladin
   std::string measure_type_description( const LoadPredictor& type )
   {
     std::string str;
-    if     ( type == LoadPredictor::DIMENSION )    str = "matrix dimension";
-    else if( type == LoadPredictor::NUMNONZEROS )  str = "number of nonzeros";
-    else if( type == LoadPredictor::DIMCUBED )     str = "matrix dimension cubed";
-    else if( type == LoadPredictor::NNZDIMSQRD )   str = "number nonzeros * dim squared";
-    else if( type == LoadPredictor::SPARSITY )     str = "matrix sparsity = nnz / dim / dim";
-    else if( type == LoadPredictor::SPARSENCUBED ) str = "sparsity * dim cubed";
-    else                                           str = "matrix dimension";
+    try{
+      if     ( type == LoadPredictor::DIMENSION )    str = "matrix dimension";
+      else if( type == LoadPredictor::NUMNONZEROS )  str = "number of nonzeros";
+      else if( type == LoadPredictor::DIMCUBED )     str = "matrix dimension cubed";
+      else if( type == LoadPredictor::NNZDIMSQRD )   str = "number nonzeros * dim squared";
+      else if( type == LoadPredictor::SPARSITY )     str = "matrix sparsity = nnz / dim / dim";
+      else if( type == LoadPredictor::SPARSENCUBED ) str = "sparsity * dim cubed";
+      else throw std::invalid_argument( "Invalid load type." );
+    }
+    catch( const std::invalid_argument& badarg ) {
+      std::cerr << "Invalid argument: " << badarg.what() << '\n';
+    }
     return str;
   }
 
