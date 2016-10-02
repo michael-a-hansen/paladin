@@ -6,6 +6,6 @@ Load balancing across MPI ranks is performed based on matrix sizes and sparsity.
 Several load measures are provided to enable optimal performance across the range of sparser, larger systems (eigendecomposition dominates cost) and denser, smaller systems (matrix I/O dominates cost).
 
 Matrices must be provided in the matrix market exchange format of NIST (see http://math.nist.gov/MatrixMarket/formats.html).
-At the moment only general (dense), real, nonsymmetric (nothing special is done for symmetric) matrices are supported, although the extension to symmetric systems, for instance, would be straightforward.
+At the moment only general (dense), real, nonsymmetric (nothing special is done for symmetric) matrices written in coordinate form are supported, although the extension to symmetric systems, for instance, would be straightforward.
 
 paladin = PArallel LApack DIstributor
