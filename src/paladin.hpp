@@ -42,8 +42,8 @@
 #include <algorithm>
 #include <complex>
 #include <iomanip>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include "types.hpp"
 #include "mpi-util.hpp"
 #include "spectrum-util.hpp"

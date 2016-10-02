@@ -46,32 +46,60 @@ namespace paladin
   StrVecT split( const std::string& str )
   {
     StrVecT split;
-    std::stringstream stream( str );
+    std::stringstream stream( std::move( str ) );
     std::string buffer;
     while( stream >> buffer )
       split.push_back( buffer );
     return split;
   }
 
+  /**
+   * @brief count lines in a file
+   * @param file ifstream for the file
+   * @result number of nonempty lines
+   */
+  int count_nonempty_lines( std::ifstream file )
+  {
+    int nlines = 0;
+    std::string line;
+    while ( std::getline( file, line ) && line != "" ) ++nlines;
+    return nlines;
+  }
 
-
+  /**
+   * @brief count lines in a file
+   * @param filename the file name as a string
+   * @result number of lines
+   */
+  int count_nonempty_lines( const std::string& filename )
+  {
+    return count_nonempty_lines( std::ifstream( filename.c_str() ) );
+  }
 
 
   /**
    * @class SquareMatrix
    * @brief container for a vector that supports 2D 1-based indexing
    */
-  struct SquareMatrix
+  class SquareMatrix
   {
-    const int nrows_, nelem_;
+  private:
+
+  public:
+    const int nrows_, nnz_, nelem_;
     DVecT mat_;
 
 
     /**
      * @brief constructing a SquareMatrix and allocating storage
      * @param nrows number of rows in the matrix
+     * @param nnz number of nonzero elements in the matrix
      */
-    SquareMatrix( const int nrows ) : nrows_( nrows ), nelem_( nrows*nrows ), mat_( nelem_, 0.0 ) {}
+    SquareMatrix( const int nrows, const int nnz )
+    : nrows_( nrows ),
+      nnz_( nnz ),
+      nelem_( nrows*nrows ),
+      mat_( nelem_, 0.0 ) {}
 
     /**
      * @brief parentheses operator for accessing a square matrix element with a 2D index
@@ -101,15 +129,20 @@ namespace paladin
      */
     void read_matrix( std::ifstream& file )
     {
-      while( file ){
-        std::string contents;
-        std::getline( file, contents );
-        if( contents.empty() ) break;
-        StrVecT stuff = split( contents );
-        const int i = std::stoi( stuff[0] );
-        const int j = std::stoi( stuff[1] );
-        const double v = std::stod( stuff[2] );
-        mat_[(i-1)*nrows_+(j-1)] = v;
+      const int maxIdxDigits = 5;
+      const int maxDoubleDigits = 16;
+      const int idxSize = maxIdxDigits + 1;
+      const int doubleSize = maxDoubleDigits + 16;
+      char ic[idxSize], jc[idxSize], vc[doubleSize];
+
+      for( int i=0; i<nnz_; ++i ){
+        file.getline( ic, idxSize, ' ' );
+        file.getline( jc, idxSize, ' ' );
+        file.getline( vc, doubleSize, '\n' );
+        const int ii = atoi( ic );
+        const int jj = atoi( jc );
+        const double vv = atof( vc );
+        mat_[(ii-1)*nrows_+(jj-1)] = vv;
       }
     }
 
@@ -145,13 +178,12 @@ namespace paladin
     StrVecT Line2 = split( line2 );
 
     int nrows = std::stoi( Line2[0] );
-    int ncols = std::stoi( Line2[1] );
     int nnz   = std::stoi( Line2[2] );
 
-    assert( nrows == ncols );
-    assert( nnz <= nrows * ncols );
+    assert( nrows == std::stoi( Line2[1] ) );
+    assert( nnz <= nrows * std::stoi( Line2[1] ) );
 
-    return SquareMatrix( nrows );
+    return SquareMatrix( nrows, nnz );
   }
 
   /**
@@ -171,30 +203,6 @@ namespace paladin
 
 
   /**
-   * @brief count lines in a file
-   * @param file ifstream for the file
-   * @result number of nonempty lines
-   */
-  int count_nonempty_lines( std::ifstream file )
-  {
-    int nlines = 0;
-    std::string line;
-    while ( std::getline( file, line ) && line != "" ) ++nlines;
-    return nlines;
-  }
-
-  /**
-   * @brief count lines in a file
-   * @param filename the file name as a string
-   * @result number of lines
-   */
-  int count_nonempty_lines( const std::string& filename )
-  {
-    return count_nonempty_lines( std::ifstream( filename.c_str() ) );
-  }
-
-
-  /**
    * @brief find the matrix dimension from a matrix market file
    * @param matrixPath the path to the matrix as a string
    * @result matrix dimension (number of rows)
@@ -209,9 +217,8 @@ namespace paladin
 
     StrVecT Line = split( line );
     int nrows = std::stoi( Line[0] );
-    int ncols = std::stoi( Line[1] );
 
-    assert( nrows == ncols );
+    assert( nrows == std::stoi( Line[1] ) );
     return nrows;
   }
 
@@ -229,11 +236,9 @@ namespace paladin
     std::getline( file, line );
 
     StrVecT Line = split( line );
-    int nrows = std::stoi( Line[0] );
-    int ncols = std::stoi( Line[1] );
     int nnz   = std::stoi( Line[2] );
+    assert( Line[0] == Line[1] );
 
-    assert( nrows == ncols );
     return nnz;
   }
 
