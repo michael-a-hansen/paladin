@@ -81,11 +81,8 @@ namespace paladin
    * @class SquareMatrix
    * @brief container for a vector that supports 2D 1-based indexing
    */
-  class SquareMatrix
+  struct SquareMatrix
   {
-  private:
-
-  public:
     const int nrows_, nnz_, nelem_;
     DVecT mat_;
 

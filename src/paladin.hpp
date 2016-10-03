@@ -100,10 +100,9 @@ namespace paladin
       if( comm.amRoot ){
         CommandLineParser clp( argc, argv );
         flockPath_ = clp.getValue( "-flock", "no-flock-provided!" );
-        std::string measureString = clp.getValue( "-load-measure", "nnz" );
         numRuns_ = std::stoi( clp.getValue( "-timing-repeats", "1" ) );
         showPods_ = clp.checkExists( "-show-pods" );
-        type_ = string_to_measure_type( measureString );
+        type_ = string_to_measure_type( std::string( clp.getValue( "-load-measure", "nnz" ) ) );
         flockSize_ = count_nonempty_lines( flockPath_ );
 
         print_header();
