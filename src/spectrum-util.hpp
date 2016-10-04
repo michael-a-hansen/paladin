@@ -90,16 +90,23 @@ namespace paladin
   }
 
   /**
-   * @brief write the spectrum to two files, for the real and imaginary parts
+   * @brief write the spectrum to a file
    * @param s const reference to a spectrum object
-   * @param realout ofstream reference to a file for the real part
-   * @param imagout ofstream reference to a file for the imaginary part
+   * @param realout ofstream reference to the file
+   *
+   * This writes the spectrum to a file in two space-separated columns,
+   * with the real part in the first and imaginary part in the second
+   *
+   * realpart_0 imagpart_0
+   * realpart_1 imagpart_1
+   * .
+   * .
+   * .
    */
-  void write_spectrum( const SpectrumT& s, std::ofstream& realout, std::ofstream& imagout )
+  void write_spectrum( const SpectrumT& s, std::ofstream&& eigsout )
   {
     for( auto eig : s ){
-      realout << eig.real() << '\n';
-      imagout << eig.imag() << '\n';
+      eigsout << eig.real() << " " << eig.imag() << '\n';
     }
   }
 

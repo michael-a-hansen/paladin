@@ -65,7 +65,6 @@ namespace paladin
     std::vector<std::string> allFlockPaths, pod;
     std::vector<int> podColors;
     std::vector<SpectrumT> spectra_;
-    std::vector<std::string> spectraOutputFileNames_;
     double localRunTime_, localReadRunTime_, localEigRunTime_;
     std::string flockPath_;
     int numRuns_, flockSize_;
@@ -203,30 +202,29 @@ namespace paladin
           endRead = std::chrono::system_clock::now();
           std::chrono::duration<double> elapsed_seconds = endRead - startRead;
           localReadRunTime_ += elapsed_seconds.count();
+
           SpectrumT s;
           DVecT A = mat.mat_;
           int N = mat.nrows_;
-          DVecT left;
-          DVecT right;
-          DVecT real( N );
-          DVecT imag( N );
-          int lwork;
-          DVecT work;
+          DVecT left, right, real( N ), imag( N ), work;
+          int lwork, info;
           double wkopt;
-          int info;
           const char nchar = 'N';
+
+          // first query dgeev for the optimal workspace size
           lwork = -1;
           dgeev_( &nchar, &nchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N, right.data(), &N, &wkopt, &lwork, &info );
-          lwork = (size_t) wkopt;
+          // allocate the workspace and compute the eigenvalues
+          lwork = ( std::size_t ) wkopt;
           work = DVecT( lwork );
           dgeev_( &nchar, &nchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N, right.data(), &N, work.data(), &lwork, &info );
-          for( int i=0; i<N; ++i )
-            s.push_back( EigenvalueT( real[i], imag[i] ) );
-          sort_spectrum( s, "LM" );
-          std::string spectrumOutputFileName = "";
+
           if( firstRunOfPod ){
+            for( int i=0; i<N; ++i ){
+              s.push_back( EigenvalueT( real[i], imag[i] ) );
+            }
+            sort_spectrum( s, "LM" );
             spectra_.push_back( s );
-            spectraOutputFileNames_.push_back( spectrumOutputFileName );
           }
           firstRunOfPod = false;
 
@@ -250,7 +248,14 @@ namespace paladin
       localEigRunTime_ = localRunTime_ - localReadRunTime_;
     }
 
-    void write_eigenvalues() {} // TODO: write me!
+    void write_eigenvalues()
+    {
+      int podIdx = 0;
+      for( auto spectrum : spectra_ ){
+        write_spectrum( spectrum, std::ofstream( pod[podIdx] + ".spectrum" ) );
+        ++podIdx;
+      }
+    }
 
     void display_timings()
     {
