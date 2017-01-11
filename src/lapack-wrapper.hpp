@@ -31,44 +31,32 @@
 #ifndef LAPACK_WRAPPER_HPP_
 #define LAPACK_WRAPPER_HPP_
 
-namespace paladin
-{
+namespace paladin {
 
-  /*
-   * @brief full spectral decomposition of a general, double-precision matrix
-   * @param doleft 'N' for no left eigenmatrix and 'V' for computing it, char reference
-   * @param doright 'N' for no right eigenmatrix and 'V' for computing it, char reference
-   * @param N number of rows in A, integer reference
-   * @param A a matrix in column-major form, double array
-   * @param lda leading dimension of A, integer reference
-   * @param real eigenvalue real parts, double array
-   * @param imag eigenvalue imaginary parts, double array
-   * @param leftmat left eigenmatrix, double array
-   * @param ldleft leading dim. of left eig matrix, integer reference
-   * @param rightmat right eigenmatrix, double array
-   * @param ldright leading dim. of right eig matrix, integer reference
-   * @param work work array size, double reference
-   * @param lwork work array, double array
-   * @param info info structure, integer reference
-   */
-  extern "C" void dgeev_(
-      const char *doleft,
-      const char *doright,
-      int *N,
-      double *A,
-      int *lda,
-      double *real,
-      double *imag,
-      double *leftmat,
-      int *ldleft,
-      double *rightmat,
-      int *ldright,
-      double *work,
-      int *lwork,
-      int *info );
+/*
+ * @brief full spectral decomposition of a general, double-precision matrix
+ * @param doleft 'N' for no left eigenmatrix and 'V' for computing it, char
+ * reference
+ * @param doright 'N' for no right eigenmatrix and 'V' for computing it, char
+ * reference
+ * @param N number of rows in A, integer reference
+ * @param A a matrix in column-major form, double array
+ * @param lda leading dimension of A, integer reference
+ * @param real eigenvalue real parts, double array
+ * @param imag eigenvalue imaginary parts, double array
+ * @param leftmat left eigenmatrix, double array
+ * @param ldleft leading dim. of left eig matrix, integer reference
+ * @param rightmat right eigenmatrix, double array
+ * @param ldright leading dim. of right eig matrix, integer reference
+ * @param work work array size, double reference
+ * @param lwork work array, double array
+ * @param info info structure, integer reference
+ */
+extern "C" void dgeev_(const char *doleft, const char *doright, int *N,
+                       double *A, int *lda, double *real, double *imag,
+                       double *leftmat, int *ldleft, double *rightmat,
+                       int *ldright, double *work, int *lwork, int *info);
 
-} // namespace paladin
-
-
+}  // namespace paladin
 
 #endif /* LAPACK_WRAPPER_HPP_ */

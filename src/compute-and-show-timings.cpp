@@ -22,17 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-
 #include "paladin.hpp"
 
-namespace paladin{};
+namespace paladin {};
 
-int main( int argc, char *argv[] )
-{
+int main(int argc, char *argv[]) {
+  paladin::MpiComm comm(argc, argv);
 
-  paladin::MpiComm comm( argc, argv );
-
-  paladin::Paladin roland( argc, argv, comm );
+  paladin::Paladin roland(argc, argv, comm);
 
   roland.compute();
 

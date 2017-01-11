@@ -31,67 +31,61 @@
 #ifndef COMMAND_LINE_PARSER_HPP_
 #define COMMAND_LINE_PARSER_HPP_
 
-#include <vector>
 #include <string>
+#include <vector>
 #include "types.hpp"
 
-namespace paladin
-{
+namespace paladin {
 
+/**
+ * @class CommandLineParser
+ * @brief tool for parsing the command line
+ *
+ * usage: mpirun -np 4 executable-name -option1 arg1 -option2 arg2 ...
+ */
+class CommandLineParser {
+ protected:
+  StrVecT pieces;
+
+ public:
   /**
-   * @class CommandLineParser
-   * @brief tool for parsing the command line
-   *
-   * usage: mpirun -np 4 executable-name -option1 arg1 -option2 arg2 ...
+   * @brief constructing a CommandLineParser from argc, argv
+   * @param argc number of command line arguments, obtained through main()
+   * @param argv char** of command line arguments, obtained through main()
    */
-  class CommandLineParser{
-  protected:
-    StrVecT pieces;
-  public:
-
-    /**
-     * @brief constructing a CommandLineParser from argc, argv
-     * @param argc number of command line arguments, obtained through main()
-     * @param argv char** of command line arguments, obtained through main()
-     */
-    CommandLineParser( const int argc, char *argv[] )
-  {
-      for( int i=1; i<argc; ++i )
-        this->pieces.push_back( std::string( argv[i] ) );
+  CommandLineParser(const int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) this->pieces.push_back(std::string(argv[i]));
   }
 
+  /**
+   * @brief check that an option was provided in the command line
+   * @param name name of the option
+   * @result true/false if the option was passed/not
+   */
+  bool checkExists(const std::string& name) const {
+    return std::find(pieces.begin(), pieces.end(), name) != pieces.end();
+  }
 
-    /**
-     * @brief check that an option was provided in the command line
-     * @param name name of the option
-     * @result true/false if the option was passed/not
-     */
-    bool checkExists( const std::string& name ) const
-    {
-      return std::find( pieces.begin(), pieces.end(), name ) != pieces.end();
-    }
+  /**
+   * @brief get the value of an option provided in the command line
+   * @param name name of the option
+   * @param name default value for the option
+   * @result the value provided for the option
+   */
+  std::string getValue(const std::string& name,
+                       const std::string& defaultStr) const {
+    if (this->checkExists(name)) {
+      std::vector<std::string>::const_iterator itr;
+      itr = std::find(pieces.begin(), pieces.end(), name);
+      if (itr != pieces.end() && ++itr != pieces.end()) {
+        return *itr;
+      } else
+        return defaultStr;
+    } else
+      return defaultStr;
+  }
+};
 
-    /**
-     * @brief get the value of an option provided in the command line
-     * @param name name of the option
-     * @param name default value for the option
-     * @result the value provided for the option
-     */
-    std::string getValue( const std::string& name, const std::string& defaultStr ) const
-    {
-      if( this->checkExists( name ) ){
-        std::vector<std::string>::const_iterator itr;
-        itr = std::find( pieces.begin(), pieces.end(), name );
-        if (itr != pieces.end() && ++itr != pieces.end()){
-          return *itr;
-        }
-        else return defaultStr;
-      }
-      else return defaultStr;
-    }
-  };
-
-} // namespace paladin
-
+}  // namespace paladin
 
 #endif /* COMMAND_LINE_PARSER_HPP_ */
