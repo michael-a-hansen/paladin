@@ -31,6 +31,9 @@
 #ifndef TYPES_HPP_
 #define TYPES_HPP_
 
+#include <memory>
+#include <stdexcept>
+
 namespace paladin {
 
 typedef std::vector<double> DVecT;
