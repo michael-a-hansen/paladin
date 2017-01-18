@@ -35,6 +35,44 @@
 
 namespace paladin {
 
+
+struct EigenSorter {
+  virtual ~EigenSorter() {}
+  virtual bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (std::norm(L) > std::norm(R));
+  }
+};
+struct LReal : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (L.real() > R.real());
+  }
+};
+struct SReal : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (L.real() < R.real());
+  }
+};
+struct LImag : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (L.imag() > R.imag());
+  }
+};
+struct SImag : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (L.imag() < R.imag());
+  }
+};
+struct LMag : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (std::norm(L) > std::norm(R));
+  }
+};
+struct SMag : public EigenSorter {
+  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
+    return (std::norm(L) < std::norm(R));
+  }
+};
+
 /**
  * @brief sorting a spectrum in a variety of ways
  * @param s reference to a spectrum object which is sorted in place
@@ -49,42 +87,6 @@ namespace paladin {
  * - LI: largest imaginary part
  */
 void sort_spectrum(SpectrumT& s, const std::string sortStr) {
-  struct EigenSorter {
-    virtual ~EigenSorter() {}
-    virtual bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (std::norm(L) > std::norm(R));
-    }
-  };
-  struct LReal : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (L.real() > R.real());
-    }
-  };
-  struct SReal : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (L.real() < R.real());
-    }
-  };
-  struct LImag : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (L.imag() > R.imag());
-    }
-  };
-  struct SImag : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (L.imag() < R.imag());
-    }
-  };
-  struct LMag : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (std::norm(L) > std::norm(R));
-    }
-  };
-  struct SMag : public EigenSorter {
-    bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-      return (std::norm(L) < std::norm(R));
-    }
-  };
 
   std::unique_ptr<EigenSorter> sorter;
   if (sortStr == "SM") {
