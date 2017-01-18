@@ -24,7 +24,7 @@
 
 #include "paladin.hpp"
 
-namespace paladin {};
+namespace paladin {}
 
 int main(int argc, char *argv[]) {
   paladin::MpiComm comm(argc, argv);
