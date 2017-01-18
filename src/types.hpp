@@ -65,7 +65,7 @@ enum class LoadPredictor {
  * @result the LoadPredictor type corresponding to the input string
  */
 LoadPredictor string_to_measure_type(const std::string& str) {
-  LoadPredictor type;
+  LoadPredictor type = LoadPredictor::NUMNONZEROS;
   try {
     if (str == "dim")
       type = LoadPredictor::DIMENSION;

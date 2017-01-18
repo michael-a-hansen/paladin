@@ -54,7 +54,7 @@ StrVecT split(const std::string& str) {
  * @param file ifstream for the file
  * @result number of nonempty lines
  */
-int count_nonempty_lines(std::ifstream file) {
+int count_nonempty_lines(std::ifstream& file) {
   int nlines = 0;
   std::string line;
   while (std::getline(file, line) && line != "") ++nlines;
@@ -67,7 +67,8 @@ int count_nonempty_lines(std::ifstream file) {
  * @result number of lines
  */
 int count_nonempty_lines(const std::string& filename) {
-  return count_nonempty_lines(std::ifstream(filename.c_str()));
+  std::ifstream stream(filename);
+  return count_nonempty_lines(stream);
 }
 
 /**
