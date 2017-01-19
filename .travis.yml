@@ -2,6 +2,10 @@ sudo: required
 dist: precise
 language: cpp
 
+cache:
+  directories:
+  - mpich
+
 matrix:
   include:
     - compiler: gcc
@@ -14,7 +18,7 @@ matrix:
             - g++-4.9
             - cmake
             - cmake-data
-      env: COMPILER=g++-4.9
+      env: MPI=mpich COMPILER=g++-4.9
     - compiler: gcc
       addons:
         apt:
@@ -25,7 +29,7 @@ matrix:
             - g++-5
             - cmake
             - cmake-data
-      env: COMPILER=g++-5
+      env: MPI=mpich COMPILER=g++-5
     - compiler: clang
       addons:
         apt:
@@ -37,7 +41,7 @@ matrix:
             - clang-3.6
             - cmake
             - cmake-data
-      env: COMPILER=clang++-3.6
+      env: MPI=mpich COMPILER=clang++-3.6
     - compiler: clang
       addons:
         apt:
@@ -49,9 +53,10 @@ matrix:
             - clang-3.7
             - cmake
             - cmake-data
-      env: COMPILER=clang++-3.7
+      env: MPI=mpich COMPILER=clang++-3.7
 
 before_install:
+  - sh ./get_mpich.sh
   - test -n $CC  && unset CC
   - test -n $CXX && unset CXX
 script:
