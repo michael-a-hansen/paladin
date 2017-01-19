@@ -11,9 +11,8 @@ set( HEADERS
      )
 
 # create dummy/empty file to circumvent restriction on add_library
-file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp "" )
-set( Paladin_Sources ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp )
-add_library( paladin STATIC ${Paladin_Sources} )
+set( paladin_sources compute-write-with-timings.cpp )
+add_library( paladin STATIC ${paladin_sources} )
 target_link_libraries( paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
 
 install( FILES

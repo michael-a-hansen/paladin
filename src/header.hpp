@@ -26,24 +26,27 @@
 #define SRC_HEADER_HPP_
 
 #include <iostream>
+#include <paladin-configure.h>
 
 namespace paladin {
 
 void print_header() {
   std::cout << '\n' << '\n';
-  std::cout
-      << " ____   ____  _       ____  ___    ____  ____  " << '\n'
-      << "|    \\ /    || |     /    ||   \\  |    ||    \\ " << '\n'
-      << "|  o  |  o  || |    |  o  ||    \\  |  | |  _  |" << '\n'
-      << "|   _/|     || |___ |     ||  D  | |  | |  |  |" << '\n'
-      << "|  |  |  _  ||     ||  _  ||     | |  | |  |  |" << '\n'
-      << "|  |  |  |  ||     ||  |  ||     | |  | |  |  |" << '\n'
-      << "|__|  |__|__||_____||__|__||_____||____||__|__|" << '\n'
-      << '\n'
-      << "PArallel LApack DIstributor for many serial eigendecompositions."
-      << '\n'
-      << "Copyright (c) 2016, 2017 Michael A. Hansen" << '\n'
-      << "------------------------------------------------" << '\n';
+  std::cout << " ____   ____  _       ____  ___    ____  ____  " << '\n'
+            << "|    \\ /    || |     /    ||   \\  |    ||    \\ " << '\n'
+            << "|  o  |  o  || |    |  o  ||    \\  |  | |  _  |" << '\n'
+            << "|   _/|     || |___ |     ||  D  | |  | |  |  |" << '\n'
+            << "|  |  |  _  ||     ||  _  ||     | |  | |  |  |" << '\n'
+            << "|  |  |  |  ||     ||  |  ||     | |  | |  |  |" << '\n'
+            << "|__|  |__|__||_____||__|__||_____||____||__|__|" << '\n'
+            << '\n'
+            << "PArallel LApack DIstributor for many serial eigendecompositions"
+            << '\n'
+            << "Copyright (c) 2016, 2017 Michael A. Hansen" << '\n'
+            << "------------------------------------------------" << '\n'
+            << "Last commit: " << PALADIN_REPO_HASH << '\n'
+            << "             " << PALADIN_REPO_DATE << '\n'
+            << "------------------------------------------------" << '\n';
   std::cout << '\n' << '\n';
 }
 

@@ -4,8 +4,8 @@ SET( SOURCES
 
 set( libs paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
 
-ADD_EXECUTABLE( cawe compute-and-write-eigenvalues.cpp )
-TARGET_LINK_LIBRARIES( cawe ${libs} )
+ADD_EXECUTABLE( test-paladin compute-and-write-eigenvalues.cpp )
+TARGET_LINK_LIBRARIES( test-paladin ${libs} )
 
 include( compare_spectra.cmake )
 

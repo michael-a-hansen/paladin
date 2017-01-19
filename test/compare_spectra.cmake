@@ -6,7 +6,7 @@ function( compare_spectra testName testDir matrixListingName numProc referenceTy
 	file( COPY ${testfiles} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${testDir}/ )
 
 	add_test( NAME ${testName}_compute_np${numProc}
-	          COMMAND mpirun -np ${numProc} cawe
+	          COMMAND mpirun -np ${numProc} test-paladin
 	          --listing=${CMAKE_CURRENT_BINARY_DIR}/${testDir}/${matrixListingName}
 	          --rootdir=${CMAKE_CURRENT_BINARY_DIR}/${testDir} )
 

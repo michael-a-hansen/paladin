@@ -22,7 +22,7 @@ endif( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
 # ------------------------------------------------
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE "Release" CACHE STRING
-       "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE )
+       "Choose the type of build, options are: Debug Release" FORCE )
 endif( NOT CMAKE_BUILD_TYPE )
 # ------------------------------------------------
 
@@ -35,11 +35,6 @@ if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
        ${CMAKE_CURRENT_BINARY_DIR}
        CACHE PATH "Installation directory" FORCE )
 endif()
-
-set( Paladin_CONFIG_INSTALL
-     ${CMAKE_INSTALL_PREFIX}/share
-     CACHE PATH
-     "Location to install configuration files" )
 # ------------------------------------------------
   
 
@@ -70,6 +65,13 @@ if( GIT_FOUND )
      set( PALADIN_REPO_DATE "\"DATE NOT FOUND\"" )
    endif()
 endif( GIT_FOUND )
+
+configure_file(
+  ${PROJECT_SOURCE_DIR}/src/paladin-configure.h.in
+  ${PROJECT_BINARY_DIR}/config/paladin-configure.h
+  @ONLY
+  )
+include_directories( ${PROJECT_BINARY_DIR}/config )
 # ------------------------------------------------
 
 
@@ -129,28 +131,6 @@ INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/src
 
 
 
-# configure file
-# ------------------------------------------------
-configure_file(
-  ${PROJECT_SOURCE_DIR}/PaladinConfigure.h.in
-  ${PROJECT_BINARY_DIR}/config/paladin/PaladinConfigure.h
-  )
-include_directories( ${PROJECT_BINARY_DIR}/config )
-# ------------------------------------------------
-
-
-
-# installation
-# ------------------------------------------------
-message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
-install( FILES
-         ${PROJECT_BINARY_DIR}/config/paladin/PaladinConfigure.h
-         DESTINATION include/paladin
-         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-# ------------------------------------------------
-
-
-
 # source code
 # ------------------------------------------------
 ADD_SUBDIRECTORY( src )
@@ -169,25 +149,6 @@ endif( ENABLE_TESTS )
 
 
 
-# configuration for projects using Paladin: this section defines
-# variables that are used for building the configuration file for the
-# Paladin installation.  This can be used by other CMake build
-# systems that use the Paladin library.
-# ------------------------------------------------------------------
-set( Paladin_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
-
-configure_file(
-               ${PROJECT_SOURCE_DIR}/PaladinConfig.cmake.in
-               ${PROJECT_BINARY_DIR}/config/PaladinConfig.cmake
-               @ONLY )
-
-install( FILES
-         ${PROJECT_BINARY_DIR}/config/PaladinConfig.cmake
-         DESTINATION ${Paladin_CONFIG_INSTALL} )
-#-----------------------------------------------------------------
-
-
-
-
+message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
 
