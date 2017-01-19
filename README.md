@@ -7,7 +7,7 @@ For problems with variety in matrix structure, static load balancing across MPI 
 Several load measures are provided to enable optimal performance across the range of sparser, larger systems (eigendecomposition dominates cost) and denser, smaller systems (I/O dominates cost).
 
 Matrices must be provided in NIST's matrix market exchange format (see http://math.nist.gov/MatrixMarket/formats.html).
-At the moment only general (dense), real, general matrices written in coordinate form are supported.
+At the moment only real, general matrices written in coordinate form are supported.
 
 paladin has been used on the following systems and compilers:
 
