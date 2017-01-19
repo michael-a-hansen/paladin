@@ -46,10 +46,20 @@ namespace paladin {
  * @param lwork work array, double array
  * @param info info structure, integer reference
  */
-extern "C" void dgeev_(const char *doleft, const char *doright, int *N,
-                       double *A, int *lda, double *real, double *imag,
-                       double *leftmat, int *ldleft, double *rightmat,
-                       int *ldright, double *work, int *lwork, int *info);
+extern "C" void dgeev_( const char* doleft,
+                        const char* doright,
+                        int* N,
+                        double* A,
+                        int* lda,
+                        double* real,
+                        double* imag,
+                        double* leftmat,
+                        int* ldleft,
+                        double* rightmat,
+                        int* ldright,
+                        double* work,
+                        int* lwork,
+                        int* info );
 
 }  // namespace paladin
 

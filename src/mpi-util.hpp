@@ -33,17 +33,17 @@ struct MpiComm {
   int numRanks, myRank, rootRank;
   bool amRoot;
 
-  MpiComm(int& argc, char* argv[]) {
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &numRanks);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+  MpiComm( int& argc, char* argv[] ) {
+    MPI_Init( &argc, &argv );
+    MPI_Comm_size( MPI_COMM_WORLD, &numRanks );
+    MPI_Comm_rank( MPI_COMM_WORLD, &myRank );
     rootRank = 0;
-    amRoot = (myRank == rootRank);
+    amRoot = ( myRank == rootRank );
   }
 
   ~MpiComm() { MPI_Finalize(); }
 
-  void barrier() const { MPI_Barrier(MPI_COMM_WORLD); }
+  void barrier() const { MPI_Barrier( MPI_COMM_WORLD ); }
 };
 
 /**
@@ -53,24 +53,24 @@ struct MpiComm {
  * @param numRanks the number of ranks
  * @param rootRank (optional) the index of the rootRank = 0 by default
  */
-void broadcast_string(std::string& str, const MpiComm& comm) {
-  if (comm.myRank == comm.rootRank) {
-    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank) {
-      if (sendToRank != comm.rootRank) {
-        MPI::COMM_WORLD.Send(str.c_str(), str.length(), MPI::CHAR, sendToRank,
-                             0);
+void broadcast_string( std::string& str, const MpiComm& comm ) {
+  if ( comm.myRank == comm.rootRank ) {
+    for ( int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank ) {
+      if ( sendToRank != comm.rootRank ) {
+        MPI::COMM_WORLD.Send( str.c_str(), str.length(), MPI::CHAR, sendToRank,
+                              0 );
       }
     }
   } else {
     MPI_Status status;
     int size;
-    MPI_Probe(comm.rootRank, 0, MPI_COMM_WORLD, &status);
-    MPI_Get_count(&status, MPI_CHAR, &size);
+    MPI_Probe( comm.rootRank, 0, MPI_COMM_WORLD, &status );
+    MPI_Get_count( &status, MPI_CHAR, &size );
 
-    std::vector<char> tmp(size);
-    MPI_Recv(tmp.data(), size, MPI_CHAR, comm.rootRank, 0, MPI_COMM_WORLD,
-             MPI_STATUS_IGNORE);
-    str.assign(tmp.begin(), tmp.end());
+    std::vector<char> tmp( size );
+    MPI_Recv( tmp.data(), size, MPI_CHAR, comm.rootRank, 0, MPI_COMM_WORLD,
+              MPI_STATUS_IGNORE );
+    str.assign( tmp.begin(), tmp.end() );
   }
   //  if (comm.myRank == comm.rootRank) {
   //    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank)

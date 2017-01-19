@@ -36,15 +36,15 @@ namespace paladin {
  * @param str the string to split
  * @param delimiter the delimiter [default is a space]
  */
-std::vector<std::string> split_string(const std::string& str,
-                                      char delimiter = ' ') {
+std::vector<std::string> split_string( const std::string& str,
+                                       char delimiter = ' ' ) {
   std::stringstream ss;
-  ss.str(str);
+  ss.str( str );
   std::string item;
   std::vector<std::string> elems;
-  while (std::getline(ss, item, delimiter)) {
-    if (!item.empty()) {
-      elems.push_back(item);
+  while ( std::getline( ss, item, delimiter ) ) {
+    if ( !item.empty() ) {
+      elems.push_back( item );
     }
   }
   return elems;
@@ -71,16 +71,16 @@ class CommandLineParser {
    * @param argc number of command line arguments, obtained through main()
    * @param argv char** of command line arguments, obtained through main()
    */
-  CommandLineParser(const int argc, char* argv[]) {
-    for (int i = 1; i < argc; ++i) {
-      std::string inputPiece = static_cast<std::string>(argv[i]);
-      inputPiece.erase(0, 2);
-      std::vector<std::string> pieces = split_string(inputPiece, '=');
-      keys_.push_back(pieces[0]);
-      if (pieces.size() > 1) {
-        vals_.push_back(pieces[1]);
+  CommandLineParser( const int argc, char* argv[] ) {
+    for ( int i = 1; i < argc; ++i ) {
+      std::string inputPiece = static_cast<std::string>( argv[i] );
+      inputPiece.erase( 0, 2 );
+      std::vector<std::string> pieces = split_string( inputPiece, '=' );
+      keys_.push_back( pieces[0] );
+      if ( pieces.size() > 1 ) {
+        vals_.push_back( pieces[1] );
       } else {
-        vals_.push_back("n/a");
+        vals_.push_back( "n/a" );
       }
     }
   }
@@ -90,8 +90,8 @@ class CommandLineParser {
    * @param name name of the option
    * @result true/false if the option was passed/not
    */
-  bool checkExists(const std::string& name) const {
-    return std::find(keys_.begin(), keys_.end(), name) != keys_.end();
+  bool checkExists( const std::string& name ) const {
+    return std::find( keys_.begin(), keys_.end(), name ) != keys_.end();
   }
 
   /**
@@ -100,12 +100,12 @@ class CommandLineParser {
    * @param name default value for the option
    * @result the value provided for the option
    */
-  std::string getValue(const std::string& name,
-                       const std::string& defaultStr) const {
-    if (checkExists(name)) {
-      auto itr = std::find(keys_.begin(), keys_.end(), name);
+  std::string getValue( const std::string& name,
+                        const std::string& defaultStr ) const {
+    if ( checkExists( name ) ) {
+      auto itr = std::find( keys_.begin(), keys_.end(), name );
       int idx = itr - keys_.begin();
-      if (itr != keys_.end()) {
+      if ( itr != keys_.end() ) {
         return vals_[idx];
       } else
         return defaultStr;

@@ -32,38 +32,38 @@ namespace paladin {
 
 struct EigenSorter {
   virtual ~EigenSorter() {}
-  virtual bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (std::norm(L) > std::norm(R));
+  virtual bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( std::norm( L ) > std::norm( R ) );
   }
 };
 struct LReal : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (L.real() > R.real());
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( L.real() > R.real() );
   }
 };
 struct SReal : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (L.real() < R.real());
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( L.real() < R.real() );
   }
 };
 struct LImag : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (L.imag() > R.imag());
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( L.imag() > R.imag() );
   }
 };
 struct SImag : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (L.imag() < R.imag());
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( L.imag() < R.imag() );
   }
 };
 struct LMag : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (std::norm(L) > std::norm(R));
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( std::norm( L ) > std::norm( R ) );
   }
 };
 struct SMag : public EigenSorter {
-  bool operator()(const EigenvalueT& L, const EigenvalueT& R) const {
-    return (std::norm(L) < std::norm(R));
+  bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
+    return ( std::norm( L ) < std::norm( R ) );
   }
 };
 
@@ -80,33 +80,33 @@ struct SMag : public EigenSorter {
  * - SI: smallest imaginary part
  * - LI: largest imaginary part
  */
-void sort_spectrum(SpectrumT& s, const std::string sortStr) {
+void sort_spectrum( SpectrumT& s, const std::string sortStr ) {
   std::unique_ptr<EigenSorter> sorter;
-  if (sortStr == "SM") {
+  if ( sortStr == "SM" ) {
     sorter = paladin::make_unique<SMag>();
-  } else if (sortStr == "LM") {
+  } else if ( sortStr == "LM" ) {
     sorter = paladin::make_unique<LMag>();
-  } else if (sortStr == "SR") {
+  } else if ( sortStr == "SR" ) {
     sorter = paladin::make_unique<SReal>();
-  } else if (sortStr == "LR") {
+  } else if ( sortStr == "LR" ) {
     sorter = paladin::make_unique<LReal>();
-  } else if (sortStr == "SI") {
+  } else if ( sortStr == "SI" ) {
     sorter = paladin::make_unique<SImag>();
-  } else if (sortStr == "LI") {
+  } else if ( sortStr == "LI" ) {
     sorter = paladin::make_unique<LImag>();
   } else {
     sorter = paladin::make_unique<LMag>();
   }
-  std::sort(s.begin(), s.end(), *sorter);
+  std::sort( s.begin(), s.end(), *sorter );
 }
 
 /**
  * @brief print the spectrum to stdout
  * @param s const reference to a spectrum object
  */
-void show_spectrum(const SpectrumT& s) {
+void show_spectrum( const SpectrumT& s ) {
   int idx = -1;
-  for (const auto& eig : s) {
+  for ( const auto& eig : s ) {
     ++idx;
     std::cout << "lambda_" << idx << " = " << eig.real() << " + " << eig.imag()
               << "j" << '\n';
@@ -127,8 +127,8 @@ void show_spectrum(const SpectrumT& s) {
  * .
  * .
  */
-void write_spectrum(const SpectrumT& s, std::ofstream&& eigsout) {
-  for (const auto& eig : s) {
+void write_spectrum( const SpectrumT& s, std::ofstream&& eigsout ) {
+  for ( const auto& eig : s ) {
     eigsout << eig.real() << " " << eig.imag() << '\n';
   }
 }
