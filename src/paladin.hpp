@@ -59,7 +59,7 @@ class Paladin {
   std::vector<int> podColors;
   std::vector<SpectrumT> spectra_;
   double localRunTime_, localReadRunTime_, localEigRunTime_;
-  std::string matrixListingPath_;
+  std::string matrixListingPath_, matrixRootPath_;
   int numRuns_, numMatrices_;
   bool showPods_;
   LoadPredictor type_;
@@ -74,6 +74,7 @@ class Paladin {
     if ( comm.amRoot ) {
       CommandLineParser clp( argc, argv );
       matrixListingPath_ = clp.getValue( "matrices", "no matrices given!" );
+      matrixRootPath_ = clp.getValue( "rootdir", "." );
       numRuns_ = std::stoi( clp.getValue( "repeats", "1" ) );
       showPods_ = clp.checkExists( "showdist" );
       type_ = string_to_measure_type(
@@ -90,7 +91,7 @@ class Paladin {
       bool badkeyfound = false;
       for ( const auto& k : clp.get_keys() ) {
         if ( k != "matrices" && k != "repeats" && k != "showdist" &&
-             k != "measure" ) {
+             k != "measure" && k != "rootdir" ) {
           std::cout << "\n-- POTENTIAL ERROR: key " << k
                     << " is not a recognized option!";
           badkeyfound = true;
@@ -98,7 +99,7 @@ class Paladin {
       }
       if ( badkeyfound ) {
         std::cout << "\n-- Allowable keys: "
-                  << "matrices, repeats, showdist, measure\n\n";
+                  << "matrices, repeats, showdist, measure, rootdir\n\n";
       }
 
       numMatrices_ = count_nonempty_lines( matrixListingPath_ );
@@ -121,8 +122,10 @@ class Paladin {
       while ( listingFile ) {
         std::string matrixPath;
         std::getline( listingFile, matrixPath );
-        if ( matrixPath.empty() )
+        if ( matrixPath.empty() ) {
           break;
+        }
+        matrixPath = matrixRootPath_ + "/" + matrixPath;
         MeasureT measure = obtain_matrix_measure( matrixPath, type_ );
         matrixListing.push_back( NameMeasurePairT( matrixPath, measure ) );
         allMatrixPaths.push_back( matrixPath );

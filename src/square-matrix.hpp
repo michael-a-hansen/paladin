@@ -31,20 +31,6 @@
 namespace paladin {
 
 /**
- * @brief splits a string by whitespace
- * @param str string to be split by whitespace
- * @result a vector of strings formed by splitting the input
- */
-StrVecT split( const std::string& str ) {
-  StrVecT split;
-  std::stringstream stream( std::move( str ) );
-  std::string buffer;
-  while ( stream >> buffer )
-    split.push_back( buffer );
-  return split;
-}
-
-/**
  * @brief count lines in a file
  * @param file ifstream for the file
  * @result number of nonempty lines
@@ -145,7 +131,7 @@ struct SquareMatrix {
 void read_header( std::ifstream& file ) {
   std::string head;
   std::getline( file, head );
-  StrVecT Header = split( head );
+  StrVecT Header = split_string( head );
   assert( Header[0] == "MatrixMarket" || Header[0] == "%%MatrixMarket" );
   assert( Header[1] == "matrix" );
   assert( Header[2] == "coordinate" );
@@ -164,7 +150,7 @@ void read_header( std::ifstream& file ) {
 SquareMatrix allocate_matrix( std::ifstream& file ) {
   std::string line2;
   std::getline( file, line2 );
-  StrVecT Line2 = split( line2 );
+  StrVecT Line2 = split_string( line2 );
 
   int nrows = std::stoi( Line2[0] );
   int nnz = std::stoi( Line2[2] );
@@ -211,7 +197,7 @@ int read_matrix_dimension_from_mm_file( const std::string& matrixPath ) {
   }
   std::getline( file, line );
 
-  StrVecT Line = split( line );
+  StrVecT Line = split_string( line );
   int nrows = std::stoi( Line[0] );
 
   assert( nrows == std::stoi( Line[1] ) );
@@ -236,7 +222,7 @@ int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
   }
   std::getline( file, line );
 
-  StrVecT Line = split( line );
+  StrVecT Line = split_string( line );
   int nnz = std::stoi( Line[2] );
   assert( Line[0] == Line[1] );
 

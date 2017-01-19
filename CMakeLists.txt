@@ -151,19 +151,29 @@ install( FILES
 
 
 
+# source code
 # ------------------------------------------------
 ADD_SUBDIRECTORY( src )
-ADD_SUBDIRECTORY( test )
 # ------------------------------------------------
 
 
 
-# ------------------------------------------------------------------
+# testing
+# ------------------------------------------------
+option( ENABLE_TESTS "Enable tests" ON )
+if( ENABLE_TESTS )
+  enable_testing()
+  add_subdirectory( test )
+endif( ENABLE_TESTS )
+# ------------------------------------------------
+
+
+
 # configuration for projects using Paladin: this section defines
 # variables that are used for building the configuration file for the
 # Paladin installation.  This can be used by other CMake build
 # systems that use the Paladin library.
-
+# ------------------------------------------------------------------
 set( Paladin_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
 
 configure_file(
