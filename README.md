@@ -53,6 +53,7 @@ EXTRA_ARGS=$@
     -D CMAKE_CXX_COMPILER=/[...]/bin/mpic++ \
     -D CMAKE_C_COMPILER=/[...]/bin/mpic \
     -D CMAKE_CXX_FLAGS=-std=c+=11 \
+    -D CMAKE_INSTALL_PREFIX=./install/share \
     $EXTRA_ARGS \
     ..
 ```
