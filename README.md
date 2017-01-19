@@ -132,11 +132,11 @@ Suppose the listing has the path, `/Users/mike/paladin-example/listing` while th
 
 From inside the `/Users/mike/paladin-example` directory we can run paladin in serial with
 
-`[...]/paladin/build/src/exec-paladin --matrices=listing`,
+`[...]/paladin/build/src/exec-paladin --listing=listing`,
 
 and in parallel on four cores with
 
-`mpirun -np 4 [...]/paladin/build/src/exec-paladin --matrices=listing`.
+`mpirun -np 4 [...]/paladin/build/src/exec-paladin --listing=listing`.
 
 #### outside the matrix directory
 Suppose we want to run only the `tri-example1.matrix` and `tri-example2.matrix` matrices.
@@ -153,15 +153,26 @@ To solve this issue, we could move the listing to the old directory and run pala
 
 ```
 [...]/paladin/build/src/exec-paladin \
-     --matrices=/Users/mike/other-listing/listing2 \
+     --listing=/Users/mike/other-listing/listing2 \
      --rootdir=/Users/mike/paladin-example
 ```
 
 
-
-
-
 ## Summary of command line options
+paladin command line options must be given as `--key=value`, as seen above in the examples. Below all of the options are summarized:
+
+1. `--listing=[value]`: the path of the matrix listing
+2. `--rootdir=[value]`: prefix to the path of the matrix files in the listing
+3. `--showdist`: add this to the command line to show the distribution of matrix files to each MPI rank
+4. `--repeats=[value]`: the number of times the decomposition is repeated. Use this if you are assessing performance and want to average the cost of the eigendecomposition over a number of runs.
+5. `--load-measure=[value]`: the measure of the matrix used for load balancing in parallel calculations. Options are below. `nnz` does a good job in most cases. If you have a large variety in matrix sizes, `dcb` may do well. For very dense matrices, I/O time is nontrivial and `nnz` should be used.
+ - `nnz`: number of nonzeros in the matrix (default load measure)
+ - `dim`: dimension of the matrix (number of rows)
+ - `dcb`: dimension cubed
+ - `zds`: number of nonzeros multiplied by the dimension squared
+ - `sps`: sparsity - number of nonzeros over dimension squared
+ - `spc`: sparsity multiplied by dimension cubed - nnz * dim
+
 
 # The name
 
