@@ -73,9 +73,8 @@ After the code has been installed (a successful call to `make install`), simply 
 
 `ctest`
 
-to compute the eigenvalues of several simple test matrices and compare to exact results or gold standards.
+to compute the eigenvalues of several simple test matrices and compare to exact eigenvalues.
 The tests cover calculations performed in serial, and in parallel with two and four cores.
-Small, simple matrices are compared against exact eigenvalues while several Jacobian matrices from combustion simulations are compared against gold standards.
 
 ## Running a calculation
 To run a calculation you need three things:
