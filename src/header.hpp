@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,20 +22,31 @@
  * IN THE SOFTWARE.
  */
 
-#include "paladin.hpp"
+#ifndef SRC_HEADER_HPP_
+#define SRC_HEADER_HPP_
 
-namespace paladin {}
+#include <iostream>
 
-int main(int argc, char *argv[]) {
-  paladin::MpiComm comm(argc, argv);
+namespace paladin {
 
-  paladin::Paladin roland(argc, argv, comm);
-
-  roland.compute();
-
-  roland.write_eigenvalues();
-
-  roland.display_timings();
-
-  return 0;
+void print_header() {
+  std::cout << '\n' << '\n';
+  std::cout
+      << " ____   ____  _       ____  ___    ____  ____  " << '\n'
+      << "|    \\ /    || |     /    ||   \\  |    ||    \\ " << '\n'
+      << "|  o  |  o  || |    |  o  ||    \\  |  | |  _  |" << '\n'
+      << "|   _/|     || |___ |     ||  D  | |  | |  |  |" << '\n'
+      << "|  |  |  _  ||     ||  _  ||     | |  | |  |  |" << '\n'
+      << "|  |  |  |  ||     ||  |  ||     | |  | |  |  |" << '\n'
+      << "|__|  |__|__||_____||__|__||_____||____||__|__|" << '\n'
+      << '\n'
+      << "PArallel LApack DIstributor for many serial eigendecompositions."
+      << '\n'
+      << "Copyright (c) 2016, 2017 Michael A. Hansen" << '\n'
+      << "------------------------------------------------" << '\n';
+  std::cout << '\n' << '\n';
 }
+
+}  // namespace paladin
+
+#endif /* SRC_HEADER_HPP_ */

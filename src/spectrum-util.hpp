@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,19 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   spectrum-util.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
+#ifndef SRC_SPECTRUM_UTIL_HPP_
+#define SRC_SPECTRUM_UTIL_HPP_
 
-#ifndef SPECTRUM_UTIL_HPP_
-#define SPECTRUM_UTIL_HPP_
-
-#include "types.hpp"
+#include <make-unique.hpp>
+#include <types.hpp>
 
 namespace paladin {
-
 
 struct EigenSorter {
   virtual ~EigenSorter() {}
@@ -87,7 +81,6 @@ struct SMag : public EigenSorter {
  * - LI: largest imaginary part
  */
 void sort_spectrum(SpectrumT& s, const std::string sortStr) {
-
   std::unique_ptr<EigenSorter> sorter;
   if (sortStr == "SM") {
     sorter = paladin::make_unique<SMag>();
@@ -113,7 +106,7 @@ void sort_spectrum(SpectrumT& s, const std::string sortStr) {
  */
 void show_spectrum(const SpectrumT& s) {
   int idx = -1;
-  for (auto eig : s) {
+  for (const auto& eig : s) {
     ++idx;
     std::cout << "lambda_" << idx << " = " << eig.real() << " + " << eig.imag()
               << "j" << '\n';
@@ -135,11 +128,11 @@ void show_spectrum(const SpectrumT& s) {
  * .
  */
 void write_spectrum(const SpectrumT& s, std::ofstream&& eigsout) {
-  for (auto eig : s) {
+  for (const auto& eig : s) {
     eigsout << eig.real() << " " << eig.imag() << '\n';
   }
 }
 
 }  // namespace paladin
 
-#endif /* SPECTRUM_UTIL_HPP_ */
+#endif /* SRC_SPECTRUM_UTIL_HPP_ */

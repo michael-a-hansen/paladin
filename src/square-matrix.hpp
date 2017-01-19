@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,17 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   square-matrix.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
-
-#ifndef SQUARE_MATRIX_HPP_
-#define SQUARE_MATRIX_HPP_
+#ifndef SRC_SQUARE_MATRIX_HPP_
+#define SRC_SQUARE_MATRIX_HPP_
 
 #include <cassert>
-#include "types.hpp"
+#include <types.hpp>
 
 namespace paladin {
 
@@ -279,4 +273,4 @@ MeasureT obtain_matrix_measure(
 
 }  // namespace paladin
 
-#endif /* SQUARE_MATRIX_HPP_ */
+#endif /* SRC_SQUARE_MATRIX_HPP_ */

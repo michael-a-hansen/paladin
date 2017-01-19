@@ -1,30 +1,31 @@
-SET( SOURCES
-     compute-and-show-timings.cpp )
+set( HEADERS
+     command-line-parser.hpp
+     lapack-wrapper.hpp
+     mpi-util.hpp
+     paladin.hpp
+     spectrum-util.hpp
+     square-matrix.hpp
+     types.hpp
+     header.hpp
+     make-unique.hpp
+     )
 
-FIND_PACKAGE( MPI REQUIRED )
+# create dummy/empty file to circumvent restriction on add_library
+file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp "" )
+set( Paladin_Sources ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp )
+add_library( paladin STATIC ${Paladin_Sources} )
+target_link_libraries( paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
 
-INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
-
-IF( APPLE )
-	MESSAGE( "Searching for framework Accelerate..." )
-	FIND_LIBRARY( BLASLAPACK Accelerate )
-	IF( NOT BLASLAPACK )
-		MESSAGE( FATAL_ERROR "Mac OS X: framework Accelerate not found!" )
-    ELSE()
-        MESSAGE( "Found framework Accelerate!" )
-	ENDIF()
-ELSE()
-    MESSAGE( "Searching for BLAS and LAPACK..." )
-    FIND_PACKAGE( BLAS REQUIRED )
-    FIND_PACKAGE( LAPACK REQUIRED )
-    SET( BLASLAPACK ${LAPACK_LIBRARIES} )
-    IF( NOT BLASLAPACK )
-        MESSAGE( FATAL_ERROR "BLAS and LAPACK not found!" )
-    ELSE()
-        MESSAGE( "Found BLAS and LAPACK!" )
-    ENDIF()
-ENDIF()
-
-
-ADD_EXECUTABLE( compute-and-show-timings compute-and-show-timings.cpp )
-TARGET_LINK_LIBRARIES( compute-and-show-timings ${BLASLAPACK} ${MPI_LIBRARIES} )
+install( FILES
+         ${HEADERS}
+         DESTINATION include/paladin
+         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+         )
+         
+install( TARGETS
+         paladin
+         EXPORT Paladin
+         DESTINATION lib/paladin/
+         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+         )
+install( EXPORT Paladin DESTINATION lib/paladin )

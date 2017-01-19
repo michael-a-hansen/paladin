@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   mpi-util.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
-
-#ifndef MPI_UTIL_HPP_
-#define MPI_UTIL_HPP_
+#ifndef SRC_MPI_UTIL_HPP_
+#define SRC_MPI_UTIL_HPP_
 
 #include <mpi.h>
 
@@ -60,10 +54,11 @@ struct MpiComm {
  * @param rootRank (optional) the index of the rootRank = 0 by default
  */
 void broadcast_string(std::string& str, const MpiComm& comm) {
-  if( comm.myRank == comm.rootRank){
-    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank){
-      if (sendToRank != comm.rootRank){
-        MPI::COMM_WORLD.Send( str.c_str(), str.length(), MPI::CHAR, sendToRank, 0);
+  if (comm.myRank == comm.rootRank) {
+    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank) {
+      if (sendToRank != comm.rootRank) {
+        MPI::COMM_WORLD.Send(str.c_str(), str.length(), MPI::CHAR, sendToRank,
+                             0);
       }
     }
   } else {
@@ -77,23 +72,24 @@ void broadcast_string(std::string& str, const MpiComm& comm) {
              MPI_STATUS_IGNORE);
     str.assign(tmp.begin(), tmp.end());
   }
-//  if (comm.myRank == comm.rootRank) {
-//    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank)
-//      if (sendToRank != comm.rootRank)
-//        MPI_Send(str.c_str(), str.size(), MPI_CHAR, sendToRank, 0, MPI_COMM_WORLD);
-//  } else {
-//    MPI_Status status;
-//    int size;
-//    MPI_Probe(comm.rootRank, 0, MPI_COMM_WORLD, &status);
-//    MPI_Get_count(&status, MPI_CHAR, &size);
-//
-//    std::vector<char> tmp(size);
-//    MPI_Recv(tmp.data(), size, MPI_CHAR, comm.rootRank, 0, MPI_COMM_WORLD,
-//             MPI_STATUS_IGNORE);
-//    str.assign(tmp.begin(), tmp.end());
-//  }
+  //  if (comm.myRank == comm.rootRank) {
+  //    for (int sendToRank = 0; sendToRank < comm.numRanks; ++sendToRank)
+  //      if (sendToRank != comm.rootRank)
+  //        MPI_Send(str.c_str(), str.size(), MPI_CHAR, sendToRank, 0,
+  //        MPI_COMM_WORLD);
+  //  } else {
+  //    MPI_Status status;
+  //    int size;
+  //    MPI_Probe(comm.rootRank, 0, MPI_COMM_WORLD, &status);
+  //    MPI_Get_count(&status, MPI_CHAR, &size);
+  //
+  //    std::vector<char> tmp(size);
+  //    MPI_Recv(tmp.data(), size, MPI_CHAR, comm.rootRank, 0, MPI_COMM_WORLD,
+  //             MPI_STATUS_IGNORE);
+  //    str.assign(tmp.begin(), tmp.end());
+  //  }
 }
 
 }  // namespace paladin
 
-#endif /* MPI_UTIL_HPP_ */
+#endif /* SRC_MPI_UTIL_HPP_ */

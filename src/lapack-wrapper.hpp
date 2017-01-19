@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   lapack-wrapper.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
-
-#ifndef LAPACK_WRAPPER_HPP_
-#define LAPACK_WRAPPER_HPP_
+#ifndef SRC_LAPACK_WRAPPER_HPP_
+#define SRC_LAPACK_WRAPPER_HPP_
 
 namespace paladin {
 
@@ -59,4 +53,4 @@ extern "C" void dgeev_(const char *doleft, const char *doright, int *N,
 
 }  // namespace paladin
 
-#endif /* LAPACK_WRAPPER_HPP_ */
+#endif /* SRC_LAPACK_WRAPPER_HPP_ */

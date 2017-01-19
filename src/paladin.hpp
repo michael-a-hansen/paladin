@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,35 +22,30 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   paladin.hpp
- *  \date   Oct 1, 2016
- *  \author mike
- */
-
-#ifndef PALADIN_HPP_
-#define PALADIN_HPP_
+#ifndef SRC_PALADIN_HPP_
+#define SRC_PALADIN_HPP_
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <command-line-parser.hpp>
 #include <complex>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <header.hpp>
 #include <iomanip>
 #include <iostream>
+#include <lapack-wrapper.hpp>
+#include <mpi-util.hpp>
+#include <spectrum-util.hpp>
+#include <square-matrix.hpp>
 #include <sstream>
 #include <string>
+#include <types.hpp>
 #include <vector>
-#include "command-line-parser.hpp"
-#include "lapack-wrapper.hpp"
-#include "mpi-util.hpp"
-#include "spectrum-util.hpp"
-#include "square-matrix.hpp"
-#include "types.hpp"
 
 namespace paladin {
 
@@ -60,78 +55,87 @@ namespace paladin {
  */
 class Paladin {
  protected:
-  std::vector<std::string> allFlockPaths, pod;
+  std::vector<std::string> allMatrixPaths, pod;
   std::vector<int> podColors;
   std::vector<SpectrumT> spectra_;
   double localRunTime_, localReadRunTime_, localEigRunTime_;
-  std::string flockPath_;
-  int numRuns_, flockSize_;
+  std::string matrixListingPath_;
+  int numRuns_, numMatrices_;
   bool showPods_;
   LoadPredictor type_;
   const MpiComm& comm_;
 
-  void print_header() {
-    std::cout << '\n' << '\n';
-    std::cout << " ____   ____  _       ____  ___    ____  ____  " << '\n'
-              << "|    \\ /    || |     /    ||   \\  |    ||    \\ " << '\n'
-              << "|  o  |  o  || |    |  o  ||    \\  |  | |  _  |" << '\n'
-              << "|   _/|     || |___ |     ||  D  | |  | |  |  |" << '\n'
-              << "|  |  |  _  ||     ||  _  ||     | |  | |  |  |" << '\n'
-              << "|  |  |  |  ||     ||  |  ||     | |  | |  |  |" << '\n'
-              << "|__|  |__|__||_____||__|__||_____||____||__|__|" << '\n'
-              << '\n'
-              << "PArallel LApack DIstributor for many eigenvalue calculations"
-              << '\n'
-              << "Copyright (c) 2016, 2017 Mike Hansen" << '\n'
-              << "------------------------------------------------" << '\n';
-    std::cout << '\n' << '\n';
-  }
-
  public:
-  Paladin(int& argc, char* argv[], const MpiComm& comm) : comm_(comm) {
+  Paladin(int& argc, char* argv[], const MpiComm& comm)
+      : localRunTime_(0.0),
+        localReadRunTime_(0.0),
+        localEigRunTime_(0.0),
+        comm_(comm) {
     if (comm.amRoot) {
       CommandLineParser clp(argc, argv);
-      flockPath_ = clp.getValue("-flock", "no-flock-provided!");
-      numRuns_ = std::stoi(clp.getValue("-timing-repeats", "1"));
-      showPods_ = clp.checkExists("-show-pods");
-      type_ = string_to_measure_type(
-          std::string(clp.getValue("-load-measure", "nnz")));
-      flockSize_ = count_nonempty_lines(flockPath_);
+      matrixListingPath_ = clp.getValue("matrices", "no matrices given!");
+      numRuns_ = std::stoi(clp.getValue("repeats", "1"));
+      showPods_ = clp.checkExists("showdist");
+      type_ =
+          string_to_measure_type(std::string(clp.getValue("measure", "nnz")));
 
-      print_header();
-      std::cout << "MPI ranks     : " << comm.numRanks << '\n';
-      std::cout << "Flock listing : " << flockPath_ << '\n';
-      std::cout << "Matrices      : " << flockSize_ << '\n';
-      std::cout << "Measure type  : " << measure_type_description(type_)
+      paladin::print_header();
+      bool parsingSuccess = true;
+      if (!parsingSuccess) {
+        if (matrixListingPath_ == "no matrices given!") {
+          std::cout << "ERROR! No matrix listing was provided!\n";
+          parsingSuccess = false;
+        }
+      }
+      bool badkeyfound = false;
+      for (const auto& k : clp.get_keys()) {
+        if (k != "matrices" && k != "repeats" && k != "showdist" &&
+            k != "measure") {
+          std::cout << "\n-- POTENTIAL ERROR: key " << k
+                    << " is not a recognized option!";
+          badkeyfound = true;
+        }
+      }
+      if (badkeyfound) {
+        std::cout << "\n-- Allowable keys: "
+                  << "matrices, repeats, showdist, measure\n\n";
+      }
+
+      numMatrices_ = count_nonempty_lines(matrixListingPath_);
+      std::cout << "\nCommand line parsed!" << '\n';
+      std::cout << "MPI ranks          : " << comm.numRanks << '\n';
+      std::cout << "Matrix listing     : " << matrixListingPath_ << '\n';
+      std::cout << "Number of matrices : " << numMatrices_ << '\n';
+      std::cout << "Load measure type  : " << measure_type_description(type_)
                 << '\n';
-      std::cout << "Timing runs   : " << numRuns_ << '\n' << '\n';
+      std::cout << "Timing repeats     : " << numRuns_ << '\n' << '\n';
 
-      // populate and sort the flock
-      std::ifstream flockFile(flockPath_);
-      if (!flockFile) {
-        std::cerr << "Couldn't open the flock file, " << flockPath_
-                  << ", exiting!" << '\n';
+      // populate and sort the matrix listing
+      std::ifstream listingFile(matrixListingPath_);
+      if (!listingFile) {
+        std::cerr << "Couldn't open the matrix listing file, "
+                  << matrixListingPath_ << ", exiting!" << '\n';
         exit(1);
       }
-      std::vector<NameMeasurePairT> flock;
-      while (flockFile) {
+      std::vector<NameMeasurePairT> matrixListing;
+      while (listingFile) {
         std::string matrixPath;
-        std::getline(flockFile, matrixPath);
+        std::getline(listingFile, matrixPath);
         if (matrixPath.empty()) break;
         MeasureT measure = obtain_matrix_measure(matrixPath, type_);
-        flock.push_back(NameMeasurePairT(matrixPath, measure));
-        allFlockPaths.push_back(matrixPath);
+        matrixListing.push_back(NameMeasurePairT(matrixPath, measure));
+        allMatrixPaths.push_back(matrixPath);
       }
-      sort_name_measure_pairs(flock);
-      allFlockPaths.resize(flockSize_);
+      sort_name_measure_pairs(matrixListing);
+      allMatrixPaths.resize(numMatrices_);
 
-      for (int i = 0; i < flockSize_; ++i) {
-        allFlockPaths[i] = flock[i].first;
+      for (int i = 0; i < numMatrices_; ++i) {
+        allMatrixPaths[i] = matrixListing[i].first;
       }
 
       // color matrices into pods
       std::vector<MeasureT> podMeasures(comm.numRanks, 0);
-      for (auto f : flock) {
+      for (const auto& f : matrixListing) {
         int minPodIdx = std::distance(
             podMeasures.begin(),
             std::min_element(podMeasures.begin(), podMeasures.end()));
@@ -140,27 +144,27 @@ class Paladin {
       }
     }
 
-    // distribute flock size, resize storage vectors on leaf ranks
-    MPI_Bcast(&flockSize_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    // distribute matrix listing size, resize storage vectors on leaf ranks
+    MPI_Bcast(&numMatrices_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (!comm.amRoot) {
-      allFlockPaths.resize(flockSize_);
-      podColors.resize(flockSize_);
+      allMatrixPaths.resize(numMatrices_);
+      podColors.resize(numMatrices_);
     }
 
     // distribute coloring vector
-    MPI_Bcast(&podColors[0], flockSize_, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&podColors[0], numMatrices_, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // distribute the flock vector, one string at a time...
-    for (auto& f : allFlockPaths) {
+    // distribute the matrix listing vector, one string at a time...
+    for (auto& f : allMatrixPaths) {
       std::string str = f;
       broadcast_string(str, comm);
       f = str;
     }
 
     // assign pods by color
-    for (int i = 0; i < flockSize_; ++i) {
+    for (int i = 0; i < numMatrices_; ++i) {
       if (podColors[i] == comm.myRank) {
-        pod.push_back(allFlockPaths[i]);
+        pod.push_back(allMatrixPaths[i]);
       }
     }
 
@@ -175,7 +179,7 @@ class Paladin {
         std::cout << "rank " << comm.myRank << ": " << pod.size() << " matrices"
                   << '\n';
         if (showPods_) {
-          for (auto p : pod) {
+          for (const auto& p : pod) {
             MeasureT measure = obtain_matrix_measure(p, type_);
             printf("%s%0.1e%s%s\n", "    ", measure, "   ", p.c_str());
           }
@@ -194,7 +198,7 @@ class Paladin {
     localReadRunTime_ = 0.0;
     start = std::chrono::system_clock::now();
 
-    for (auto p : pod) {
+    for (const auto& p : pod) {
       bool firstRunOfPod = true;
       for (int num = 0; num < numRuns_; ++num) {
         startRead = std::chrono::system_clock::now();
@@ -229,18 +233,6 @@ class Paladin {
           spectra_.push_back(s);
         }
         firstRunOfPod = false;
-
-        //        std::ostringstream strsMyRank;
-        //        strsMyRank << comm.myRank;
-        //        std::string myRankStr = strsMyRank.str();
-        //        std::ostringstream strsIdx;
-        //        strsIdx << idx;
-        //        std::string idxStr = strsIdx.str();
-        //      std::string output( "eigs_" + comm.myRankStr + "_" + idxStr +
-        //      ".eig" );
-        //      std::ofstream ofs;
-        //      ofs.open( output, std::ofstream::out | std::ofstream::app );
-        //      show_spectrum( s );
       }
     }
 
@@ -253,7 +245,7 @@ class Paladin {
 
   void write_eigenvalues() {
     int podIdx = 0;
-    for (auto spectrum : spectra_) {
+    for (const auto& spectrum : spectra_) {
       write_spectrum(spectrum, std::ofstream(pod[podIdx] + ".spectrum"));
       ++podIdx;
     }
@@ -332,4 +324,4 @@ class Paladin {
 };
 }
 
-#endif /* PALADIN_HPP_ */
+#endif /* SRC_PALADIN_HPP_ */

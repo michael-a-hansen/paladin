@@ -1,9 +1,183 @@
-PROJECT( paladin )
+PROJECT( paladin CXX )
 cmake_minimum_required( VERSION 3.1.0 )
 
+set( MAJOR_VERSION "1" )
+set( MINOR_VERSION "0" )
+set( PATCH_VERSION "0" )
+
+
+# warn about building in source
+# ------------------------------------------------
+if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
+  message( WARNING "\nIt appears that you are building directly in the source directory.\n"
+                   "This is strongly discouraged.\n"
+                   "Suggestion:\n\tmkdir build; cd build\n"
+                   "Then run cmake from the 'build' directory" ) 
+endif( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
+# ------------------------------------------------
+
+
+
+# default to release builds
+# ------------------------------------------------
+if( NOT CMAKE_BUILD_TYPE )
+  set( CMAKE_BUILD_TYPE "Release" CACHE STRING
+       "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE )
+endif( NOT CMAKE_BUILD_TYPE )
+# ------------------------------------------------
+
+
+
+# Set the location for the installation.
+# ------------------------------------------------
+if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
+  set( CMAKE_INSTALL_PREFIX
+       ${CMAKE_CURRENT_BINARY_DIR}
+       CACHE PATH "Installation directory" FORCE )
+endif()
+
+set( Paladin_CONFIG_INSTALL
+     ${CMAKE_INSTALL_PREFIX}/share
+     CACHE PATH
+     "Location to install configuration files" )
+# ------------------------------------------------
+  
+
+
+# git & version information
+# ------------------------------------------------
+set( PALADIN_REPO_DATE "\"DATE NOT FOUND\"" )
+set( PALADIN_REPO_HASH "\"HASH NOT FOUND\"" )
+find_package( Git )
+if( GIT_FOUND )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%H\""
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE RESULT
+    OUTPUT_VARIABLE PALADIN_REPO_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  if( NOT ${RESULT} EQUAL 0 )
+    set( PALADIN_REPO_HASH "\"HASH NOT FOUND\"" )
+  endif()
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE PALADIN_REPO_DATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+   if( NOT ${RESULT} EQUAL 0 )
+     set( PALADIN_REPO_DATE "\"DATE NOT FOUND\"" )
+   endif()
+endif( GIT_FOUND )
+# ------------------------------------------------
+
+
+
+# MPI
+# ------------------------------------------------
+FIND_PACKAGE( MPI REQUIRED )
+# ------------------------------------------------
+
+
+
+# LAPACK & BLAS
+# ------------------------------------------------
+IF( APPLE )
+	MESSAGE( "Searching for framework Accelerate..." )
+	FIND_LIBRARY( BLASLAPACK Accelerate )
+	IF( NOT BLASLAPACK )
+		MESSAGE( FATAL_ERROR "Mac OS X: framework Accelerate not found!" )
+    ELSE()
+        MESSAGE( "-- Found framework Accelerate!" )
+	ENDIF()
+ELSE()
+    MESSAGE( "Searching for BLAS and LAPACK..." )
+    FIND_PACKAGE( BLAS REQUIRED )
+    FIND_PACKAGE( LAPACK REQUIRED )
+    SET( BLASLAPACK ${LAPACK_LIBRARIES} )
+    IF( NOT BLASLAPACK )
+        MESSAGE( FATAL_ERROR "BLAS and LAPACK not found!" )
+    ELSE()
+        MESSAGE( "-- Found BLAS and LAPACK!" )
+    ENDIF()
+ENDIF()
+# ------------------------------------------------
+
+
+
+# C++11
+# ------------------------------------------------
 SET( CMAKE_CXX_STANDARD 11 )
 SET( CMAKE_CXX_STANDARD_REQUIRED ON )
+# ------------------------------------------------
 
+
+
+# build flags
+# ------------------------------------------------
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic" )
+# ------------------------------------------------
 
+
+
+# includes
+# ------------------------------------------------
+INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/src
+                     ${MPI_INCLUDE_PATH} )
+# ------------------------------------------------
+
+
+
+# configure file
+# ------------------------------------------------
+configure_file(
+  ${PROJECT_SOURCE_DIR}/PaladinConfigure.h.in
+  ${PROJECT_BINARY_DIR}/config/paladin/PaladinConfigure.h
+  )
+include_directories( ${PROJECT_BINARY_DIR}/config )
+# ------------------------------------------------
+
+
+
+# installation
+# ------------------------------------------------
+message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
+install( FILES
+         ${PROJECT_BINARY_DIR}/config/paladin/PaladinConfigure.h
+         DESTINATION include/paladin
+         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+# ------------------------------------------------
+
+
+
+# ------------------------------------------------
 ADD_SUBDIRECTORY( src )
+ADD_SUBDIRECTORY( test )
+# ------------------------------------------------
+
+
+
+# ------------------------------------------------------------------
+# configuration for projects using Paladin: this section defines
+# variables that are used for building the configuration file for the
+# Paladin installation.  This can be used by other CMake build
+# systems that use the Paladin library.
+
+set( Paladin_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
+
+configure_file(
+               ${PROJECT_SOURCE_DIR}/PaladinConfig.cmake.in
+               ${PROJECT_BINARY_DIR}/config/PaladinConfig.cmake
+               @ONLY )
+
+install( FILES
+         ${PROJECT_BINARY_DIR}/config/PaladinConfig.cmake
+         DESTINATION ${Paladin_CONFIG_INSTALL} )
+#-----------------------------------------------------------------
+
+
+
+
+
+

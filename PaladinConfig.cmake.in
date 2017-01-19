@@ -1,0 +1,20 @@
+# PaladinConfig.cmake - defines variables to assist in applications
+# that link with Paladin
+#
+# The following variables are defined:
+#
+# Paladin_FOUND - true (1)
+#
+# Paladin_INCLUDE_DIR - include directories for Paladin
+#
+# Typical usage:
+#    find_package( paladin )
+#    include_directories( ${Paladin_INCLUDE_DIR} )
+#    target_link_libraries( ... paladin )
+#
+
+set( Paladin_INCLUDE_DIR
+  "@Paladin_INCLUDE@"
+  )
+
+include( "@CMAKE_INSTALL_PREFIX@/lib/paladin/Paladin.cmake" )

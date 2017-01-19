@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,30 +22,48 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   command-line-parser.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
-
-#ifndef COMMAND_LINE_PARSER_HPP_
-#define COMMAND_LINE_PARSER_HPP_
+#ifndef SRC_COMMAND_LINE_PARSER_HPP_
+#define SRC_COMMAND_LINE_PARSER_HPP_
 
 #include <string>
+#include <types.hpp>
 #include <vector>
-#include "types.hpp"
 
 namespace paladin {
+
+/**
+ * @brief split a string by a delimiter
+ * @param str the string to split
+ * @param delimiter the delimiter [default is a space]
+ */
+std::vector<std::string> split_string(const std::string& str,
+                                      char delimiter = ' ') {
+  std::stringstream ss;
+  ss.str(str);
+  std::string item;
+  std::vector<std::string> elems;
+  while (std::getline(ss, item, delimiter)) {
+    if (!item.empty()) {
+      elems.push_back(item);
+    }
+  }
+  return elems;
+}
 
 /**
  * @class CommandLineParser
  * @brief tool for parsing the command line
  *
- * usage: mpirun -np 4 executable-name -option1 arg1 -option2 arg2 ...
+ * usage: executable-name --key1=value1 --key2=value2 ...
+ *
+ * - Two dashes must be used
+ * - An equals sign must be used
+ * - If a key is written multiple times, only the first is used
  */
 class CommandLineParser {
  protected:
-  StrVecT pieces;
+  std::vector<std::string> keys_;
+  std::vector<std::string> vals_;
 
  public:
   /**
@@ -54,7 +72,17 @@ class CommandLineParser {
    * @param argv char** of command line arguments, obtained through main()
    */
   CommandLineParser(const int argc, char* argv[]) {
-    for (int i = 1; i < argc; ++i) this->pieces.push_back(std::string(argv[i]));
+    for (int i = 1; i < argc; ++i) {
+      std::string inputPiece = static_cast<std::string>(argv[i]);
+      inputPiece.erase(0, 2);
+      std::vector<std::string> pieces = split_string(inputPiece, '=');
+      keys_.push_back(pieces[0]);
+      if (pieces.size() > 1) {
+        vals_.push_back(pieces[1]);
+      } else {
+        vals_.push_back("n/a");
+      }
+    }
   }
 
   /**
@@ -63,7 +91,7 @@ class CommandLineParser {
    * @result true/false if the option was passed/not
    */
   bool checkExists(const std::string& name) const {
-    return std::find(pieces.begin(), pieces.end(), name) != pieces.end();
+    return std::find(keys_.begin(), keys_.end(), name) != keys_.end();
   }
 
   /**
@@ -74,18 +102,28 @@ class CommandLineParser {
    */
   std::string getValue(const std::string& name,
                        const std::string& defaultStr) const {
-    if (this->checkExists(name)) {
-      std::vector<std::string>::const_iterator itr;
-      itr = std::find(pieces.begin(), pieces.end(), name);
-      if (itr != pieces.end() && ++itr != pieces.end()) {
-        return *itr;
+    if (checkExists(name)) {
+      auto itr = std::find(keys_.begin(), keys_.end(), name);
+      int idx = itr - keys_.begin();
+      if (itr != keys_.end()) {
+        return vals_[idx];
       } else
         return defaultStr;
     } else
       return defaultStr;
   }
+
+  /**
+   * @brief obtain the keys
+   */
+  std::vector<std::string> get_keys() { return keys_; }
+
+  /**
+   * @brief obtain the values
+   */
+  std::vector<std::string> get_values() { return vals_; }
 };
 
 }  // namespace paladin
 
-#endif /* COMMAND_LINE_PARSER_HPP_ */
+#endif /* SRC_COMMAND_LINE_PARSER_HPP_ */

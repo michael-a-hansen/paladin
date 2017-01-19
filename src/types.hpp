@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 Mike Hansen
+ * Copyright (c) 2016, 2017 Michael A. Hansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,28 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  \file   types.hpp
- *  \date   Sep 29, 2016
- *  \author mike
- */
+#ifndef SRC_TYPES_HPP_
+#define SRC_TYPES_HPP_
 
-#ifndef TYPES_HPP_
-#define TYPES_HPP_
-
-#include <memory>
+#include <complex>
+#include <iostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace paladin {
 
-typedef std::vector<double> DVecT;
-typedef std::vector<std::string> StrVecT;
+using DVecT = std::vector<double>;
+using StrVecT = std::vector<std::string>;
 
-typedef double MeasureT;
-typedef std::pair<std::string, MeasureT> NameMeasurePairT;
+using MeasureT = double;
+using NameMeasurePairT = std::pair<std::string, MeasureT>;
 
-typedef std::complex<double> EigenvalueT;
-typedef std::vector<EigenvalueT> SpectrumT;
+using EigenvalueT = std::complex<double>;
+using SpectrumT = std::vector<EigenvalueT>;
 
 /**
  * @enum LoadPredictor
@@ -117,28 +114,19 @@ std::string measure_type_description(const LoadPredictor& type) {
 
 /**
  * @brief sorting a vector of NameMeasurePairs by the load measure
- * @param flock reference to a vector of NameMeasurePairs which is sorted in
+ * @param listing reference to a vector of NameMeasurePairs which is sorted in
  * place
  */
-void sort_name_measure_pairs(std::vector<NameMeasurePairT>& flock) {
+void sort_name_measure_pairs(std::vector<NameMeasurePairT>& listing) {
   struct MeasureComparator {
     inline bool operator()(const NameMeasurePairT& left,
                            const NameMeasurePairT& right) {
       return (left.second > right.second);
     }
   };
-  std::sort(flock.begin(), flock.end(), MeasureComparator());
-}
-
-/**
- * @brief make a unique pointer with only C++11 support
- * @param constructor argument list
- */
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+  std::sort(listing.begin(), listing.end(), MeasureComparator());
 }
 
 }  // namespace paladin
 
-#endif /* TYPES_HPP_ */
+#endif /* SRC_TYPES_HPP_ */
