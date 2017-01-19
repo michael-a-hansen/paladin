@@ -78,9 +78,90 @@ The tests cover calculations performed in serial, and in parallel with two and f
 Small, simple matrices are compared against exact eigenvalues while several Jacobian matrices from combustion simulations are compared against gold standards.
 
 ## Running a calculation
+To run a calculation you need three things:
+1. a successful install build
+2. matrix files
+3. a matrix listing
+
+### example matrix file
+The triangular matrix below has the eigenvalues `{1+0j, 3+0j, 9+0j}`
+```
+A = [1, 2, 7;
+     0, 3, 4;
+     0, 0, 9]
+```
+The file in matrix market form appropriate for paladin is below.
+The first line is necessary in that exact form.
+The following lines starting with `%` are comments that have no impact on paladin.
+The first line following the comments, `3 3 5` is the number of rows, number of columns, and number of nonzero elements.
+For eigendecompositions, the matrix must be square and so the numbers of rows and columns must be equivalent.
+
+Following this are the matrix elements, written as `[row index] [column index] [element value]` where the indices are 1-based. Compare the matrix written above and below until it is clear.
+
+```
+%%MatrixMarket matrix coordinate real general
+%
+% comments...
+% example triangular matrix
+%
+3 3 6
+1 1 1
+1 2 2
+1 3 7
+2 2 3
+2 3 4
+3 3 9
+```
+
+### example matrix listing
+With the matrix file above, we move to the matrix listing.
+Suppose we called the matrix file `tri-example1.matrix`.
+Our listing file would simply include this file name on its own line, followed by any other matrix files to be included in the calculation.
+
+```
+tri-example1.matrix
+tri-example2.matrix
+tri-example3.matrix
+...
+```
 
 
-## Command line options
+### running paladin
+#### inside the matrix directory
+Suppose the listing has the path, `/Users/mike/paladin-example/listing` while the matrix files are `/Users/mike/paladin-example/tri-example1.matrix`, `/Users/mike/paladin-example/tri-example2.matrix`, `/Users/mike/paladin-example/tri-example3.matrix`, etc.
+
+From inside the `/Users/mike/paladin-example` directory we can run paladin in serial with
+
+`[...]/paladin/build/src/exec-paladin --matrices=listing`,
+
+and in parallel on four cores with
+
+`mpirun -np 4 [...]/paladin/build/src/exec-paladin --matrices=listing`.
+
+#### outside the matrix directory
+Suppose we want to run only the `tri-example1.matrix` and `tri-example2.matrix` matrices.
+We would make a new listing file,
+
+```
+tri-example1.matrix
+tri-example2.matrix
+```
+
+and perhaps we saved this new listing file in a new directory `/Users/mike/other-listing/listing2`. There is a problem now. If we run paladin from this directory it will look for `tri-example1.matrix` in the _current_ directory, where it is _not_.
+
+To solve this issue, we could move the listing to the old directory and run paladin from there... or we could run paladin from any directory by using the `rootdir` option and specifying a full path on the listing, as below. The `rootdir` is the location at which the matrices exist. When `rootdir` is specified, paladin looks for a matrix at `[rootdir]/tri-example1.matrix`.
+
+```
+[...]/paladin/build/src/exec-paladin \
+     --matrices=/Users/mike/other-listing/listing2 \
+     --rootdir=/Users/mike/paladin-example
+```
+
+
+
+
+
+## Summary of command line options
 
 # The name
 

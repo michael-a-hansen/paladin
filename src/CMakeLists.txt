@@ -29,3 +29,12 @@ install( TARGETS
          PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
          )
 install( EXPORT Paladin DESTINATION lib/paladin )
+
+
+SET( SOURCES
+     compute-write-with-timings.cpp ) 
+
+set( libs paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
+
+ADD_EXECUTABLE( exec-paladin compute-write-with-timings.cpp )
+TARGET_LINK_LIBRARIES( exec-paladin ${libs} )
