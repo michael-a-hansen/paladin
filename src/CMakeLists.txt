@@ -10,7 +10,6 @@ set( HEADERS
      make-unique.hpp
      )
 
-# create dummy/empty file to circumvent restriction on add_library
 set( paladin_sources compute-write-with-timings.cpp )
 add_library( paladin STATIC ${paladin_sources} )
 target_link_libraries( paladin ${BLASLAPACK} ${MPI_LIBRARIES} )
