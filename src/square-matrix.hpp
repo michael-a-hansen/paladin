@@ -52,8 +52,9 @@ StrVecT split( const std::string& str ) {
 int count_nonempty_lines( std::ifstream& file ) {
   int nlines = 0;
   std::string line;
-  while ( std::getline( file, line ) && line != "" )
+  while ( std::getline( file, line ) && line != "" ) {
     ++nlines;
+  }
   return nlines;
 }
 
@@ -150,6 +151,9 @@ void read_header( std::ifstream& file ) {
   assert( Header[2] == "coordinate" );
   assert( Header[3] == "real" );
   assert( Header[4] == "general" );
+  while ( file.peek() == '%' ) {
+    std::getline( file, head );
+  }
 }
 
 /**
@@ -202,7 +206,9 @@ int read_matrix_dimension_from_mm_file( const std::string& matrixPath ) {
     exit( 1 );
   }
   std::string line;
-  std::getline( file, line );
+  while ( file.peek() == '%' ) {
+    std::getline( file, line );
+  }
   std::getline( file, line );
 
   StrVecT Line = split( line );
@@ -225,7 +231,9 @@ int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
     exit( 1 );
   }
   std::string line;
-  std::getline( file, line );
+  while ( file.peek() == '%' ) {
+    std::getline( file, line );
+  }
   std::getline( file, line );
 
   StrVecT Line = split( line );
