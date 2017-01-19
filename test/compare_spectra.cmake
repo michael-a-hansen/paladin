@@ -7,7 +7,7 @@ function( compare_spectra testName testDir matrixListingName numProc referenceTy
 
 	add_test( NAME ${testName}_compute_np${numProc}
 	          COMMAND mpirun -np ${numProc} cawe
-	          --matrices=${CMAKE_CURRENT_BINARY_DIR}/${testDir}/${matrixListingName}
+	          --listing=${CMAKE_CURRENT_BINARY_DIR}/${testDir}/${matrixListingName}
 	          --rootdir=${CMAKE_CURRENT_BINARY_DIR}/${testDir} )
 
   	FILE( READ ${CMAKE_CURRENT_BINARY_DIR}/${testDir}/${matrixListingName} matrixFiles )

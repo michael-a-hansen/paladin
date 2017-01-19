@@ -73,7 +73,7 @@ class Paladin {
         comm_( comm ) {
     if ( comm.amRoot ) {
       CommandLineParser clp( argc, argv );
-      matrixListingPath_ = clp.getValue( "matrices", "no matrices given!" );
+      matrixListingPath_ = clp.getValue( "listing", "no matrices given!" );
       matrixRootPath_ = clp.getValue( "rootdir", "." );
       numRuns_ = std::stoi( clp.getValue( "repeats", "1" ) );
       showPods_ = clp.checkExists( "showdist" );
@@ -90,7 +90,7 @@ class Paladin {
       }
       bool badkeyfound = false;
       for ( const auto& k : clp.get_keys() ) {
-        if ( k != "matrices" && k != "repeats" && k != "showdist" &&
+        if ( k != "listing" && k != "repeats" && k != "showdist" &&
              k != "measure" && k != "rootdir" ) {
           std::cout << "\n-- POTENTIAL ERROR: key " << k
                     << " is not a recognized option!";
