@@ -29,10 +29,8 @@ namespace paladin {
 
 /*
  * @brief full spectral decomposition of a general, double-precision matrix
- * @param doleft 'N' for no left eigenmatrix and 'V' for computing it, char
- * reference
- * @param doright 'N' for no right eigenmatrix and 'V' for computing it, char
- * reference
+ * @param doleft 'N' for no left eigenmatrix and 'V' for computing it, char ref.
+ * @param doright 'N' for no right eigenmatrix and 'V' for computing it, char ref.
  * @param N number of rows in A, integer reference
  * @param A a matrix in column-major form, double array
  * @param lda leading dimension of A, integer reference

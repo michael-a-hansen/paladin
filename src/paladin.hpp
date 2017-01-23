@@ -50,7 +50,9 @@ namespace paladin {
 
 /**
  * @class Paladin
- * @brief PArallel LApack DIstributor for many eigenvalue calculations
+ * @brief PArallel LApack DIstributor for many eigendecompositions
+ *
+ * Manages distribution and parallel computation of eigendecompositions
  */
 class Paladin {
  protected:
@@ -69,11 +71,14 @@ class Paladin {
   double vectorWriteThreshold_ = 1.0e-3;
 
  public:
+  /**
+   * @brief construct a Paladin object
+   * @param argc 1st argument from main(), number of arguments
+   * @param argv 2nd argument from main(), the command line arguments
+   * @param comm a paladin::MpiComm object
+   */
   Paladin( int& argc, char* argv[], const MpiComm& comm )
-      : localRunTime_( 0.0 ),
-        localReadRunTime_( 0.0 ),
-        localEigRunTime_( 0.0 ),
-        comm_( comm ) {
+      : localRunTime_( 0.0 ), localReadRunTime_( 0.0 ), localEigRunTime_( 0.0 ), comm_( comm ) {
     if ( comm.amRoot ) {
       CommandLineParser clp( argc, argv );
       matrixListingPath_ = clp.getValue( "listing", "no matrices given!" );
@@ -82,11 +87,9 @@ class Paladin {
       showPods_ = clp.checkExists( "showdist" );
       doRight_ = clp.checkExists( "right" );
       doLeft_ = clp.checkExists( "left" );
-      type_ = string_to_measure_type(
-          std::string( clp.getValue( "measure", "nnz" ) ) );
+      type_ = string_to_measure_type( std::string( clp.getValue( "measure", "nnz" ) ) );
       eigenvalueSort_ = clp.getValue( "sort", "LM" );
-      vectorWriteThreshold_ =
-          std::stod( clp.getValue( "write-threshold", "1e-3" ) );
+      vectorWriteThreshold_ = std::stod( clp.getValue( "write-threshold", "1e-3" ) );
 
       paladin::print_header();
       bool parsingSuccess = true;
@@ -98,11 +101,10 @@ class Paladin {
       }
       bool badkeyfound = false;
       for ( const auto& k : clp.get_keys() ) {
-        if ( k != "listing" && k != "repeats" && k != "showdist" &&
-             k != "measure" && k != "rootdir" && k != "left" && k != "right" &&
-             k != "sort" && k != "write-threshold" ) {
-          std::cout << "\n-- POTENTIAL ERROR: key " << k
-                    << " is not a recognized option!";
+        if ( k != "listing" && k != "repeats" && k != "showdist" && k != "measure" &&
+             k != "rootdir" && k != "left" && k != "right" && k != "sort" &&
+             k != "write-threshold" ) {
+          std::cout << "\n-- POTENTIAL ERROR: key " << k << " is not a recognized option!";
           badkeyfound = true;
         }
       }
@@ -117,15 +119,14 @@ class Paladin {
       std::cout << "MPI ranks          : " << comm.numRanks << '\n';
       std::cout << "Matrix listing     : " << matrixListingPath_ << '\n';
       std::cout << "Number of matrices : " << numMatrices_ << '\n';
-      std::cout << "Load measure type  : " << measure_type_description( type_ )
-                << '\n';
+      std::cout << "Load measure type  : " << measure_type_description( type_ ) << '\n';
       std::cout << "Timing repeats     : " << numRuns_ << '\n' << '\n';
 
       // populate and sort the matrix listing
       std::ifstream listingFile( matrixListingPath_ );
       if ( !listingFile ) {
-        std::cerr << "Couldn't open the matrix listing file, "
-                  << matrixListingPath_ << ", exiting!" << '\n';
+        std::cerr << "Couldn't open the matrix listing file, " << matrixListingPath_ << ", exiting!"
+                  << '\n';
         exit( 1 );
       }
       std::vector<NameMeasurePairT> matrixListing;
@@ -150,9 +151,8 @@ class Paladin {
       // color matrices into pods
       std::vector<double> podMeasures( comm.numRanks, 0 );
       for ( const auto& f : matrixListing ) {
-        int minPodIdx = std::distance(
-            podMeasures.begin(),
-            std::min_element( podMeasures.begin(), podMeasures.end() ) );
+        int minPodIdx = std::distance( podMeasures.begin(),
+                                       std::min_element( podMeasures.begin(), podMeasures.end() ) );
         podMeasures[minPodIdx] += f.second;
         podColors.push_back( minPodIdx );
       }
@@ -196,8 +196,7 @@ class Paladin {
     // print matrix counts per pod and maybe the pods themselves
     for ( int rank = 0; rank < comm.numRanks; ++rank ) {
       if ( comm.myRank == rank ) {
-        std::cout << "rank " << comm.myRank << ": " << pod.size() << " matrices"
-                  << '\n';
+        std::cout << "rank " << comm.myRank << ": " << pod.size() << " matrices" << '\n';
         if ( showPods_ ) {
           for ( const auto& p : pod ) {
             double measure = obtain_matrix_measure( p, type_ );
@@ -217,9 +216,11 @@ class Paladin {
     MPI_Bcast( &numRuns_, 1, MPI_INT, 0, MPI_COMM_WORLD );
   }
 
+  /**
+   * @brief compute the eigendecomposition
+   */
   void compute() {
-    std::chrono::time_point<std::chrono::system_clock> start, end, startRead,
-        endRead;
+    std::chrono::time_point<std::chrono::system_clock> start, end, startRead, endRead;
     localReadRunTime_ = 0.0;
     start = std::chrono::system_clock::now();
 
@@ -252,51 +253,41 @@ class Paladin {
 
         // first query dgeev for the optimal workspace size
         lwork = -1;
-        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(),
-                imag.data(), left.data(), &N, right.data(), &N, &wkopt, &lwork,
-                &info );
+        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N,
+                right.data(), &N, &wkopt, &lwork, &info );
         // allocate the workspace and compute the decomposition
         lwork = static_cast<std::size_t>( wkopt );
         work = std::vector<double>( lwork );
-        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(),
-                imag.data(), left.data(), &N, right.data(), &N, work.data(),
-                &lwork, &info );
+        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N,
+                right.data(), &N, work.data(), &lwork, &info );
 
         if ( firstRunOfPod ) {
           bool skipNext = false;
           for ( int i = 0; i < N - 1; ++i ) {
-            spectrum.append_eigenvalue(
-                std::complex<double>( real[i], imag[i] ) );
+            spectrum.append_eigenvalue( std::complex<double>( real[i], imag[i] ) );
             if ( !skipNext ) {
-              if ( imag[i] == -imag[i + 1] &&
-                   imag[i] != 0 ) {  // if complex conjugate pair
-                std::vector<std::complex<double> > leftComplexI( N ),
-                    rightComplexI( N ), leftComplexIp1( N ),
-                    rightComplexIp1( N );
+              if ( imag[i] == -imag[i + 1] && imag[i] != 0 ) {  // if complex conjugate pair
+                std::vector<std::complex<double> > leftComplexI( N ), rightComplexI( N ),
+                    leftComplexIp1( N ), rightComplexIp1( N );
                 if ( doLeft_ ) {
                   for ( int j = i * N; j < i * N + N; ++j ) {
-                    leftComplexI[j - i * N] =
-                        std::complex<double>( left[j], -left[j + N] );
-                    leftComplexIp1[j - i * N] =
-                        std::complex<double>( left[j], left[j + N] );
+                    leftComplexI[j - i * N] = std::complex<double>( left[j], -left[j + N] );
+                    leftComplexIp1[j - i * N] = std::complex<double>( left[j], left[j + N] );
                   }
                   spectrum.append_left_eigenvector( leftComplexI );
                   spectrum.append_left_eigenvector( leftComplexIp1 );
                 }
                 if ( doRight_ ) {
                   for ( int j = i * N; j < i * N + N; ++j ) {
-                    rightComplexI[j - i * N] =
-                        std::complex<double>( right[j], -right[j + N] );
-                    rightComplexIp1[j - i * N] =
-                        std::complex<double>( right[j], right[j + N] );
+                    rightComplexI[j - i * N] = std::complex<double>( right[j], -right[j + N] );
+                    rightComplexIp1[j - i * N] = std::complex<double>( right[j], right[j + N] );
                   }
                   spectrum.append_right_eigenvector( rightComplexI );
                   spectrum.append_right_eigenvector( rightComplexIp1 );
                 }
                 skipNext = true;
               } else {  // if not complex conjugate pair
-                std::vector<std::complex<double> > leftComplex( N ),
-                    rightComplex( N );
+                std::vector<std::complex<double> > leftComplex( N ), rightComplex( N );
 
                 if ( doLeft_ ) {
                   for ( int j = i * N; j < i * N + N; ++j ) {
@@ -306,8 +297,7 @@ class Paladin {
                 }
                 if ( doRight_ ) {
                   for ( int j = i * N; j < i * N + N; ++j ) {
-                    rightComplex[j - i * N] =
-                        std::complex<double>( right[j], 0 );
+                    rightComplex[j - i * N] = std::complex<double>( right[j], 0 );
                   }
                   spectrum.append_right_eigenvector( rightComplex );
                 }
@@ -318,11 +308,9 @@ class Paladin {
             }
           }
           int i = N - 1;
-          spectrum.append_eigenvalue(
-              std::complex<double>( real[i], imag[i] ) );
+          spectrum.append_eigenvalue( std::complex<double>( real[i], imag[i] ) );
           if ( !skipNext ) {
-            std::vector<std::complex<double> > leftComplex( N ),
-                rightComplex( N );
+            std::vector<std::complex<double> > leftComplex( N ), rightComplex( N );
             if ( doLeft_ ) {
               for ( int j = i * N; j < i * N + N; ++j ) {
                 leftComplex[j - i * N] = std::complex<double>( left[j], 0 );
@@ -358,25 +346,26 @@ class Paladin {
     for ( const auto& spectrum : spectra_ ) {
       spectrum.write_eigenvalues( std::ofstream( pod[podIdx] + ".spectrum" ) );
       if ( doLeft_ || doRight_ ) {
-        spectrum.write_eigenvectors(
-            std::ofstream( pod[podIdx] + ".leftvecs" ),
-            std::ofstream( pod[podIdx] + ".rightvecs" ), doLeft_, doRight_ );
+        spectrum.write_eigenvectors( std::ofstream( pod[podIdx] + ".leftvecs" ),
+                                     std::ofstream( pod[podIdx] + ".rightvecs" ), doLeft_,
+                                     doRight_ );
       }
       ++podIdx;
     }
   }
 
+  /**
+   * @brief write timings to stdout
+   */
   void display_timings() {
     if ( comm_.amRoot ) {
-      std::cout << '\n'
-                << "Timings averaged over " << numRuns_ << " runs:" << '\n';
-      std::cout << "                      runtimes (s)" << '\t' << '\t' << '\t'
-                << "  fractions" << '\n';
-      std::cout << "        -----------------------------------------" << '\t'
-                << "-------------" << '\n';
-      std::cout << "rank" << '\t' << "read" << '\t' << '\t' << "eig." << '\t'
-                << '\t' << "total" << '\t' << '\t' << "read" << '\t' << "eig."
+      std::cout << '\n' << "Timings averaged over " << numRuns_ << " runs:" << '\n';
+      std::cout << "                      runtimes (s)" << '\t' << '\t' << '\t' << "  fractions"
                 << '\n';
+      std::cout << "        -----------------------------------------" << '\t' << "-------------"
+                << '\n';
+      std::cout << "rank" << '\t' << "read" << '\t' << '\t' << "eig." << '\t' << '\t' << "total"
+                << '\t' << '\t' << "read" << '\t' << "eig." << '\n';
     }
     comm_.barrier();
 
@@ -385,9 +374,8 @@ class Paladin {
 
     for ( int rank = 0; rank < comm_.numRanks; ++rank ) {
       if ( comm_.myRank == rank ) {
-        printf( "%i\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", comm_.myRank,
-                localReadRunTime_, localEigRunTime_, localRunTime_, readFrac,
-                eigFrac );
+        printf( "%i\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", comm_.myRank, localReadRunTime_,
+                localEigRunTime_, localRunTime_, readFrac, eigFrac );
       }
       comm_.barrier();
     }
@@ -395,24 +383,15 @@ class Paladin {
     double minRunTime, maxRunTime, totalRunTime;
     double minReadRunTime, maxReadRunTime, totalReadRunTime;
     double minEigRunTime, maxEigRunTime, totalEigRunTime;
-    MPI_Reduce( &localReadRunTime_, &minReadRunTime, 1, MPI_DOUBLE, MPI_MIN, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localReadRunTime_, &maxReadRunTime, 1, MPI_DOUBLE, MPI_MAX, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localReadRunTime_, &totalReadRunTime, 1, MPI_DOUBLE, MPI_SUM,
-                0, MPI_COMM_WORLD );
-    MPI_Reduce( &localEigRunTime_, &minEigRunTime, 1, MPI_DOUBLE, MPI_MIN, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localEigRunTime_, &maxEigRunTime, 1, MPI_DOUBLE, MPI_MAX, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localEigRunTime_, &totalEigRunTime, 1, MPI_DOUBLE, MPI_SUM, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localRunTime_, &minRunTime, 1, MPI_DOUBLE, MPI_MIN, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localRunTime_, &maxRunTime, 1, MPI_DOUBLE, MPI_MAX, 0,
-                MPI_COMM_WORLD );
-    MPI_Reduce( &localRunTime_, &totalRunTime, 1, MPI_DOUBLE, MPI_SUM, 0,
-                MPI_COMM_WORLD );
+    MPI_Reduce( &localReadRunTime_, &minReadRunTime, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localReadRunTime_, &maxReadRunTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localReadRunTime_, &totalReadRunTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localEigRunTime_, &minEigRunTime, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localEigRunTime_, &maxEigRunTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localEigRunTime_, &totalEigRunTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localRunTime_, &minRunTime, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localRunTime_, &maxRunTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+    MPI_Reduce( &localRunTime_, &totalRunTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
     if ( comm_.amRoot ) {
       const double numRanks = static_cast<double>( comm_.numRanks );
@@ -425,12 +404,10 @@ class Paladin {
       std::cout << "-----------------------------------------------------------"
                    "----------"
                 << '\n';
-      printf( "%s\t%0.3e\t%0.3e\t%0.3e\n", "min", minReadRunTime, minEigRunTime,
-              minRunTime );
-      printf( "%s\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", "avg", avgReadRunTime,
-              avgEigRunTime, avgRunTime, avgReadFrac, avgEigFrac );
-      printf( "%s\t%0.3e\t%0.3e\t%0.3e\n", "max", maxReadRunTime, maxEigRunTime,
-              maxRunTime );
+      printf( "%s\t%0.3e\t%0.3e\t%0.3e\n", "min", minReadRunTime, minEigRunTime, minRunTime );
+      printf( "%s\t%0.3e\t%0.3e\t%0.3e\t%0.2f\t%0.2f\n", "avg", avgReadRunTime, avgEigRunTime,
+              avgRunTime, avgReadFrac, avgEigFrac );
+      printf( "%s\t%0.3e\t%0.3e\t%0.3e\n", "max", maxReadRunTime, maxEigRunTime, maxRunTime );
 
       const double li = maxRunTime / avgRunTime - 1.0;
       std::cout << '\n' << "load imbalance = " << 100 * li << "%" << '\n';

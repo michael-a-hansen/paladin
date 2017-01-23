@@ -37,14 +37,7 @@ using NameMeasurePairT = std::pair<std::string, double>;
  * @enum LoadPredictor
  * @brief Types of predicting a matrix load
  */
-enum class LoadPredictor {
-  DIMENSION,
-  NUMNONZEROS,
-  DIMCUBED,
-  NNZDIMSQRD,
-  SPARSITY,
-  SPARSENCUBED
-};
+enum class LoadPredictor { DIMENSION, NUMNONZEROS, DIMCUBED, NNZDIMSQRD, SPARSITY, SPARSENCUBED };
 
 /**
  * @brief reading abbreviated input strings into LoadPredictor types
@@ -110,8 +103,7 @@ std::string measure_type_description( const LoadPredictor& type ) {
  */
 void sort_name_measure_pairs( std::vector<NameMeasurePairT>& listing ) {
   struct MeasureComparator {
-    inline bool operator()( const NameMeasurePairT& left,
-                            const NameMeasurePairT& right ) {
+    inline bool operator()( const NameMeasurePairT& left, const NameMeasurePairT& right ) {
       return ( left.second > right.second );
     }
   };

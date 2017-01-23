@@ -36,8 +36,7 @@ namespace paladin {
  * @param str the string to split
  * @param delimiter the delimiter [default is a space]
  */
-std::vector<std::string> split_string( const std::string& str,
-                                       char delimiter = ' ' ) {
+std::vector<std::string> split_string( const std::string& str, char delimiter = ' ' ) {
   std::stringstream ss;
   ss.str( str );
   std::string item;
@@ -100,8 +99,7 @@ class CommandLineParser {
    * @param name default value for the option
    * @result the value provided for the option
    */
-  std::string getValue( const std::string& name,
-                        const std::string& defaultStr ) const {
+  std::string getValue( const std::string& name, const std::string& defaultStr ) const {
     if ( checkExists( name ) ) {
       auto itr = std::find( keys_.begin(), keys_.end(), name );
       int idx = itr - keys_.begin();

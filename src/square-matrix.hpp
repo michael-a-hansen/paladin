@@ -68,10 +68,7 @@ struct SquareMatrix {
    * @param nnz number of nonzero elements in the matrix
    */
   SquareMatrix( const int nrows, const int nnz )
-      : nrows_( nrows ),
-        nnz_( nnz ),
-        nelem_( nrows * nrows ),
-        mat_( nelem_, 0.0 ) {}
+      : nrows_( nrows ), nnz_( nnz ), nelem_( nrows * nrows ), mat_( nelem_, 0.0 ) {}
 
   /**
    * @brief parentheses operator for accessing a square matrix element with a 2D
@@ -80,9 +77,7 @@ struct SquareMatrix {
    * @param j column index (1-based)
    * @result reference to the element at the i-th row and j-th column
    */
-  double& operator()( const int i, const int j ) {
-    return mat_[( i - 1 ) * nrows_ + ( j - 1 )];
-  }
+  double& operator()( const int i, const int j ) { return mat_[( i - 1 ) * nrows_ + ( j - 1 )]; }
 
   /**
    * @brief print the matrix to stdout in square form
@@ -175,8 +170,7 @@ SquareMatrix allocate_matrix( std::ifstream& file ) {
 SquareMatrix read_matrix_from_mm_file( const std::string& matrixPath ) {
   std::ifstream file( matrixPath );
   if ( !file ) {
-    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!"
-              << '\n';
+    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n';
     exit( 1 );
   }
   read_header( file );
@@ -193,8 +187,7 @@ SquareMatrix read_matrix_from_mm_file( const std::string& matrixPath ) {
 int read_matrix_dimension_from_mm_file( const std::string& matrixPath ) {
   std::ifstream file( matrixPath );
   if ( !file ) {
-    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!"
-              << '\n';
+    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n';
     exit( 1 );
   }
   std::string line;
@@ -218,8 +211,7 @@ int read_matrix_dimension_from_mm_file( const std::string& matrixPath ) {
 int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
   std::ifstream file( matrixPath );
   if ( !file ) {
-    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!"
-              << '\n';
+    std::cerr << "Couldn't open the matrix file, " << matrixPath << ", exiting!" << '\n';
     exit( 1 );
   }
   std::string line;
@@ -241,14 +233,11 @@ int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
  * @param type LoadPredictor type used to estimate the matrix load
  * @result predicted load measure
  */
-double obtain_matrix_measure(
-    const std::string& matrixPath,
-    const LoadPredictor& type = LoadPredictor::DIMENSION ) {
+double obtain_matrix_measure( const std::string& matrixPath,
+                              const LoadPredictor& type = LoadPredictor::DIMENSION ) {
   double measure = 0;
-  double dim =
-      static_cast<double>( read_matrix_dimension_from_mm_file( matrixPath ) );
-  double nnz =
-      static_cast<double>( read_matrix_nnzeros_from_mm_file( matrixPath ) );
+  double dim = static_cast<double>( read_matrix_dimension_from_mm_file( matrixPath ) );
+  double nnz = static_cast<double>( read_matrix_nnzeros_from_mm_file( matrixPath ) );
   try {
     switch ( type ) {
       case LoadPredictor::DIMENSION:

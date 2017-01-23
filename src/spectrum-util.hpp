@@ -41,8 +41,7 @@ using EigenPairT = std::pair<EigenvalueT, RLPairT>;
 class SpectralDecomposition {
  protected:
   std::vector<std::complex<double> > eigenvalues_;
-  std::vector<std::vector<std::complex<double> > > leftEigenvectors_,
-      rightEigenvectors_;
+  std::vector<std::vector<std::complex<double> > > leftEigenvectors_, rightEigenvectors_;
 
   const double vectorWriteThreshold_ = 1.0e-3;
 
@@ -141,8 +140,7 @@ class SpectralDecomposition {
    * @brief append a left eigenvector to the decomposition
    * @param eigenvectorL the left eigenvector to append
    */
-  void append_left_eigenvector(
-      const std::vector<std::complex<double> > eigenvectorL ) {
+  void append_left_eigenvector( const std::vector<std::complex<double> > eigenvectorL ) {
     leftEigenvectors_.push_back( eigenvectorL );
   }
 
@@ -150,8 +148,7 @@ class SpectralDecomposition {
    * @brief append a right eigenvector to the decomposition
    * @param eigenvectorR the right eigenvector to append
    */
-  void append_right_eigenvector(
-      const std::vector<std::complex<double> > eigenvectorR ) {
+  void append_right_eigenvector( const std::vector<std::complex<double> > eigenvectorR ) {
     rightEigenvectors_.push_back( eigenvectorR );
   }
 
@@ -168,9 +165,7 @@ class SpectralDecomposition {
    * - SI: smallest imaginary part
    * - LI: largest imaginary part
    */
-  void sort( const std::string sortStr,
-             const bool doLeft,
-             const bool doRight ) {
+  void sort( const std::string sortStr, const bool doLeft, const bool doRight ) {
     const int N = static_cast<int>( eigenvalues_.size() );
     std::vector<EigenPairT> eigenpairs;
     eigenpairs.reserve( N );
@@ -178,17 +173,15 @@ class SpectralDecomposition {
     for ( int i = 0; i < N; ++i ) {
       if ( doLeft && doRight ) {
         eigenpairs.push_back( std::make_pair(
-            eigenvalues_[i],
-            std::make_pair( leftEigenvectors_[i], rightEigenvectors_[i] ) ) );
+            eigenvalues_[i], std::make_pair( leftEigenvectors_[i], rightEigenvectors_[i] ) ) );
       } else if ( doLeft ) {
-        eigenpairs.push_back( std::make_pair(
-            eigenvalues_[i], std::make_pair( leftEigenvectors_[i], null ) ) );
-      } else if ( doRight ) {
-        eigenpairs.push_back( std::make_pair(
-            eigenvalues_[i], std::make_pair( null, rightEigenvectors_[i] ) ) );
-      } else {
         eigenpairs.push_back(
-            std::make_pair( eigenvalues_[i], std::make_pair( null, null ) ) );
+            std::make_pair( eigenvalues_[i], std::make_pair( leftEigenvectors_[i], null ) ) );
+      } else if ( doRight ) {
+        eigenpairs.push_back(
+            std::make_pair( eigenvalues_[i], std::make_pair( null, rightEigenvectors_[i] ) ) );
+      } else {
+        eigenpairs.push_back( std::make_pair( eigenvalues_[i], std::make_pair( null, null ) ) );
       }
     }
 
@@ -226,8 +219,7 @@ class SpectralDecomposition {
     int idx = -1;
     for ( const auto& eig : eigenvalues_ ) {
       ++idx;
-      std::cout << "lambda_" << idx << " = " << eig.real() << " + "
-                << eig.imag() << "j" << '\n';
+      std::cout << "lambda_" << idx << " = " << eig.real() << " + " << eig.imag() << "j" << '\n';
     }
   }
 
@@ -247,8 +239,7 @@ class SpectralDecomposition {
   void write_eigenvalues( std::ofstream&& eigsout ) const {
     const int N = static_cast<int>( eigenvalues_.size() );
     for ( int i = 0; i < N; ++i ) {
-      eigsout << eigenvalues_[i].real() << " " << eigenvalues_[i].imag()
-              << '\n';
+      eigsout << eigenvalues_[i].real() << " " << eigenvalues_[i].imag() << '\n';
     }
   }
 
@@ -256,8 +247,12 @@ class SpectralDecomposition {
    * @brief write the eigenvectors to a file
    * @param leftout ofstream reference to the file for left eigenvectors
    * @param rightout ofstream reference to the file for right eigenvectors
+   * @param writeLeft boolean to write the left eigenvectors
+   * @param writeRight boolean to write the right eigenvectors
    *
-   * Document me when I'm working!
+   * This writes out the eigenvectors as complex matrix market format files.
+   * All elements whose magnitude is within a threshold of the largest element
+   * magnitude are written.
    */
   void write_eigenvectors( std::ofstream&& leftout,
                            std::ofstream&& rightout,
@@ -265,12 +260,10 @@ class SpectralDecomposition {
                            const bool writeRight ) const {
     const int N = static_cast<int>( eigenvalues_.size() );
     if ( writeLeft ) {
-      // find number of nonzeros
       int nnzL = 0;
       for ( int i = 0; i < N; ++i ) {
         double maxL = std::norm( *std::max_element(
-            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(),
-            LMagComplexValue() ) );
+            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
         for ( int j = 0; j < N; ++j ) {
           const std::complex<double> leij = leftEigenvectors_[i][j];
           if ( std::norm( leij ) > vectorWriteThreshold_ * maxL ) {
@@ -280,30 +273,22 @@ class SpectralDecomposition {
       }
       leftout << "%%MatrixMarket matrix coordinate complex general\n";
       leftout << N << " " << N << " " << nnzL << '\n';
-      // iterate through eigenvectors
       for ( int i = 0; i < N; ++i ) {
-        // iterate through each eigenvector
         double maxElement = std::norm( *std::max_element(
-            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(),
-            LMagComplexValue() ) );
+            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
         for ( int j = 0; j < N; ++j ) {
           const std::complex<double> leij = leftEigenvectors_[i][j];
-          // only print if absolute value beats threshold
           if ( std::norm( leij ) > vectorWriteThreshold_ * maxElement ) {
-            // write element of eigenvector matrix to file
-            leftout << j + 1 << " " << i + 1 << " " << leij.real() << " "
-                    << leij.imag() << '\n';
+            leftout << j + 1 << " " << i + 1 << " " << leij.real() << " " << leij.imag() << '\n';
           }
         }
       }
     }
     if ( writeRight ) {
-      // find number of nonzeros
       int nnzR = 0;
       for ( int i = 0; i < N; ++i ) {
         double maxR = std::norm( *std::max_element(
-            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(),
-            LMagComplexValue() ) );
+            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
         for ( int j = 0; j < N; ++j ) {
           const std::complex<double> reij = rightEigenvectors_[i][j];
           if ( std::norm( reij ) > vectorWriteThreshold_ * maxR ) {
@@ -313,19 +298,13 @@ class SpectralDecomposition {
       }
       rightout << "%%MatrixMarket matrix coordinate complex general\n";
       rightout << N << " " << N << " " << nnzR << '\n';
-      // iterate through eigenvectors
       for ( int i = 0; i < N; ++i ) {
-        // iterate through each eigenvector
         double maxElement = std::norm( *std::max_element(
-            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(),
-            LMagComplexValue() ) );
+            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
         for ( int j = 0; j < N; ++j ) {
           const std::complex<double> reij = rightEigenvectors_[i][j];
-          // only print if absolute value beats threshold
           if ( std::norm( reij ) > vectorWriteThreshold_ * maxElement ) {
-            // write element of eigenvector matrix to file
-            rightout << j + 1 << " " << i + 1 << " " << reij.real() << " "
-                     << reij.imag() << '\n';
+            rightout << j + 1 << " " << i + 1 << " " << reij.real() << " " << reij.imag() << '\n';
           }
         }
       }

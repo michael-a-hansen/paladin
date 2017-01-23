@@ -40,8 +40,7 @@ void print_header() {
             << "|  |  |  |  ||     ||  |  ||     | |  | |  |  |" << '\n'
             << "|__|  |__|__||_____||__|__||_____||____||__|__|" << '\n'
             << '\n'
-            << "PArallel LApack DIstributor for many serial eigendecompositions"
-            << '\n'
+            << "PArallel LApack DIstributor for many serial eigendecompositions" << '\n'
             << "Copyright (c) 2016, 2017 Michael A. Hansen" << '\n'
             << "------------------------------------------------" << '\n'
             << "Last commit: " << PALADIN_REPO_HASH << '\n'
