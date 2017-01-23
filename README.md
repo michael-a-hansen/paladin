@@ -175,6 +175,20 @@ paladin command line options must be given as `--key=value`, as seen above in th
  - `sps`: sparsity - number of nonzeros over dimension squared
  - `spc`: sparsity multiplied by dimension cubed - nnz * dim
 
+## Post-processing results from paladin
+To process results obtained in paladin, see the `[...]/paladin/postprocessing` subdirectory.
+Here you can find example python scripts that plot eigenvalues on the complex plane and load eigenvectors.
+This directory contains the `pypp` package that provides some convenience functions for loading and plotting eigenvalues and eigenvectors.
+To use the `pypp` package with a particular python executable on your system, you can install it with pip.
+Simply navigate to `[...]/paladin/postprocessing` and run pip with your desired python executable:
+
+```
+cd [...]/paladin/postprocessing
+[python-executable] -m pip install --upgrade .
+```
+
+After installing with pip, `pypp` can be imported as any package, for example `import pypp.pypp as pp` as seen in the example scripts.
+`pypp` has been tested with python 3.5 on Mac OS X.
 
 # The name
 
