@@ -7,7 +7,6 @@ set( HEADERS
      square-matrix.hpp
      measure-util.hpp
      header.hpp
-     make-unique.hpp
      )
 
 set( paladin_sources compute-write-with-timings.cpp )

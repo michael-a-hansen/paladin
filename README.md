@@ -167,7 +167,15 @@ paladin command line options must be given as `--key=value`, as seen above in th
 4. `--repeats=[value]`: the number of times the decomposition is repeated. Use this if you are assessing performance and want to average the cost of the eigendecomposition over a number of runs.
 5. `--left`: compute and write out the left eigenvectors
 6. `--right`: compute and write out the right eigenvectors
-7. `--load-measure=[value]`: the measure of the matrix used for load balancing in parallel calculations. Options are below. `nnz` does a good job in most cases. If you have a large variety in matrix sizes, `dcb` may do well. For very dense matrices, I/O time is nontrivial and `nnz` should be used.
+7. `--write-threshold=[value]`: the threshold that determines if eigenvector elements are written. The elements are written if their magnitude is greater than the threshold multiplied by the largest element.
+8. `--sort=[value]`: how the eigenpairs are sorted (by eigenvalues). The following keys are supported.
+ - `LM`: largest magnitude comes first
+ - `SM`: smallest magnitude comes first
+ - `LR`: largest real part
+ - `SR`: smallest real part
+ - `LI`: largest imaginary part
+ - `SI`: smallest imaginary part
+9. `--load-measure=[value]`: the measure of the matrix used for load balancing in parallel calculations. Options are below. `nnz` does a good job in most cases. If you have a large variety in matrix sizes, `dcb` may do well. For very dense matrices, I/O time is nontrivial and `nnz` should be used.
  - `nnz`: number of nonzeros in the matrix (default load measure)
  - `dim`: dimension of the matrix (number of rows)
  - `dcb`: dimension cubed

@@ -65,6 +65,8 @@ class Paladin {
   const MpiComm& comm_;
   bool doRight_ = false;
   bool doLeft_ = false;
+  std::string eigenvalueSort_ = "LM";
+  double vectorWriteThreshold_ = 1.0e-3;
 
  public:
   Paladin( int& argc, char* argv[], const MpiComm& comm )
@@ -82,6 +84,9 @@ class Paladin {
       doLeft_ = clp.checkExists( "left" );
       type_ = string_to_measure_type(
           std::string( clp.getValue( "measure", "nnz" ) ) );
+      eigenvalueSort_ = clp.getValue( "sort", "LM" );
+      vectorWriteThreshold_ =
+          std::stod( clp.getValue( "write-threshold", "1e-3" ) );
 
       paladin::print_header();
       bool parsingSuccess = true;
@@ -94,16 +99,17 @@ class Paladin {
       bool badkeyfound = false;
       for ( const auto& k : clp.get_keys() ) {
         if ( k != "listing" && k != "repeats" && k != "showdist" &&
-             k != "measure" && k != "rootdir" && k != "left" && k != "right" ) {
+             k != "measure" && k != "rootdir" && k != "left" && k != "right" &&
+             k != "sort" && k != "write-threshold" ) {
           std::cout << "\n-- POTENTIAL ERROR: key " << k
                     << " is not a recognized option!";
           badkeyfound = true;
         }
       }
       if ( badkeyfound ) {
-        std::cout
-            << "\n-- Allowable keys: "
-            << "listing, repeats, showdist, measure, rootdir, left, right\n\n";
+        std::cout << "\n-- Allowable keys: "
+                  << "listing, repeats, showdist, measure, rootdir, left, "
+                     "right, sort, write-threshold\n\n";
       }
 
       numMatrices_ = count_nonempty_lines( matrixListingPath_ );
@@ -169,6 +175,12 @@ class Paladin {
       f = str;
     }
 
+    // distribute the sort measure
+    broadcast_string( eigenvalueSort_, comm );
+
+    // distribute the vector write threshold
+    MPI_Bcast( &vectorWriteThreshold_, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+
     // assign pods by color
     for ( int i = 0; i < numMatrices_; ++i ) {
       if ( podColors[i] == comm.myRank ) {
@@ -222,7 +234,7 @@ class Paladin {
 
         std::vector<double> A = mat.mat_;
         int N = mat.nrows_;
-        SpectralDecomposition spectrum( N );
+        SpectralDecomposition spectrum( N, vectorWriteThreshold_ );
         std::vector<double> left, right, real( N ), imag( N ), work;
         int lwork, info;
         double wkopt;
@@ -324,7 +336,7 @@ class Paladin {
               spectrum.append_right_eigenvector( rightComplex );
             }
           }
-          spectrum.sort( "LM", doLeft_, doRight_ );
+          spectrum.sort( eigenvalueSort_, doLeft_, doRight_ );
           spectra_.push_back( spectrum );
         }
         firstRunOfPod = false;
@@ -338,6 +350,9 @@ class Paladin {
     localEigRunTime_ = localRunTime_ - localReadRunTime_;
   }
 
+  /**
+   * @brief write the decomposition details (values & vectors) to disk
+   */
   void write_decomposition() {
     int podIdx = 0;
     for ( const auto& spectrum : spectra_ ) {

@@ -25,8 +25,6 @@
 #ifndef SRC_SPECTRUM_UTIL_HPP_
 #define SRC_SPECTRUM_UTIL_HPP_
 
-#include <make-unique.hpp>
-
 namespace paladin {
 
 using EigenvalueT = std::complex<double>;
@@ -46,24 +44,13 @@ class SpectralDecomposition {
   std::vector<std::vector<std::complex<double> > > leftEigenvectors_,
       rightEigenvectors_;
 
-  const double vectorWriteThreshold_ = 1e-3;
-
-  /**
-   * @class EigenSorter
-   * Base class for sorting eigenpairs by real/imaginary parts or magnitude
-   */
-  struct EigenSorter {
-    virtual ~EigenSorter() {}
-    virtual bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( std::norm( L.first ) > std::norm( R.first ) );
-    }
-  };
+  const double vectorWriteThreshold_ = 1.0e-3;
 
   /**
    * @class LReal
    * Comparator class for sorting eigenpairs by largest real part
    */
-  struct LReal : public EigenSorter {
+  struct LReal {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( L.first.real() > R.first.real() );
     }
@@ -73,7 +60,7 @@ class SpectralDecomposition {
    * @class SReal
    * Comparator class for sorting eigenpairs by smallest real part
    */
-  struct SReal : public EigenSorter {
+  struct SReal {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( L.first.real() < R.first.real() );
     }
@@ -83,7 +70,7 @@ class SpectralDecomposition {
    * @class LImag
    * Comparator class for sorting eigenpairs by largest imaginary part
    */
-  struct LImag : public EigenSorter {
+  struct LImag {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( L.first.imag() > R.first.imag() );
     }
@@ -93,7 +80,7 @@ class SpectralDecomposition {
    * @class SImag
    * Comparator class for sorting eigenpairs by smallest imaginary part
    */
-  struct SImag : public EigenSorter {
+  struct SImag {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( L.first.imag() < R.first.imag() );
     }
@@ -103,7 +90,7 @@ class SpectralDecomposition {
    * @class LMag
    * Comparator class for sorting eigenpairs by largest magnitude
    */
-  struct LMag : public EigenSorter {
+  struct LMag {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( std::norm( L.first ) > std::norm( R.first ) );
     }
@@ -113,7 +100,7 @@ class SpectralDecomposition {
    * @class SMag
    * Comparator class for sorting eigenpairs by smallest magnitude
    */
-  struct SMag : public EigenSorter {
+  struct SMag {
     bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
       return ( std::norm( L.first ) < std::norm( R.first ) );
     }
@@ -123,7 +110,7 @@ class SpectralDecomposition {
    * @class LMagComplexValue
    * Comparator class for sorting complex values by largest magnitude
    */
-  struct LMagComplexValue : public EigenSorter {
+  struct LMagComplexValue {
     bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
       return ( std::norm( L ) < std::norm( R ) );
     }
@@ -135,7 +122,7 @@ class SpectralDecomposition {
    * @param N the size of the matrix
    *
    */
-  SpectralDecomposition( const int N, const double threshold = 1e-3 )
+  SpectralDecomposition( const int N, const double threshold = 1.0e-3 )
       : vectorWriteThreshold_( threshold ) {
     eigenvalues_.reserve( N );
     leftEigenvectors_.reserve( N );
@@ -184,53 +171,49 @@ class SpectralDecomposition {
   void sort( const std::string sortStr,
              const bool doLeft,
              const bool doRight ) {
-    std::unique_ptr<EigenSorter> sorter;
-    if ( sortStr == "SM" ) {
-      sorter = paladin::make_unique<SMag>();
-    } else if ( sortStr == "LM" ) {
-      sorter = paladin::make_unique<LMag>();
-    } else if ( sortStr == "SR" ) {
-      sorter = paladin::make_unique<SReal>();
-    } else if ( sortStr == "LR" ) {
-      sorter = paladin::make_unique<LReal>();
-    } else if ( sortStr == "SI" ) {
-      sorter = paladin::make_unique<SImag>();
-    } else if ( sortStr == "LI" ) {
-      sorter = paladin::make_unique<LImag>();
-    } else {
-      sorter = paladin::make_unique<LMag>();
-    }
-
+    const int N = static_cast<int>( eigenvalues_.size() );
     std::vector<EigenPairT> eigenpairs;
-    for ( std::size_t i = 0; i < eigenvalues_.size(); ++i ) {
+    eigenpairs.reserve( N );
+    std::vector<std::complex<double> > null( N );
+    for ( int i = 0; i < N; ++i ) {
       if ( doLeft && doRight ) {
         eigenpairs.push_back( std::make_pair(
             eigenvalues_[i],
             std::make_pair( leftEigenvectors_[i], rightEigenvectors_[i] ) ) );
       } else if ( doLeft ) {
-        std::vector<std::complex<double> > null( eigenvalues_.size() );
         eigenpairs.push_back( std::make_pair(
             eigenvalues_[i], std::make_pair( leftEigenvectors_[i], null ) ) );
       } else if ( doRight ) {
-        std::vector<std::complex<double> > null( eigenvalues_.size() );
         eigenpairs.push_back( std::make_pair(
             eigenvalues_[i], std::make_pair( null, rightEigenvectors_[i] ) ) );
       } else {
-        std::vector<std::complex<double> > null( eigenvalues_.size() );
         eigenpairs.push_back(
             std::make_pair( eigenvalues_[i], std::make_pair( null, null ) ) );
       }
     }
-    std::sort( eigenpairs.begin(), eigenpairs.end(), *sorter );
+
+    if ( sortStr == "SM" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), SMag() );
+    } else if ( sortStr == "LM" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), LMag() );
+    } else if ( sortStr == "SR" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), SReal() );
+    } else if ( sortStr == "LR" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), LReal() );
+    } else if ( sortStr == "SI" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), SImag() );
+    } else if ( sortStr == "LI" ) {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), LImag() );
+    } else {
+      std::sort( eigenpairs.begin(), eigenpairs.end(), LMag() );
+    }
 
     for ( std::size_t i = 0; i < eigenvalues_.size(); ++i ) {
       eigenvalues_[i] = eigenpairs[i].first;
-      if ( doLeft && doRight ) {
-        rightEigenvectors_[i] = eigenpairs[i].second.first;
+      if ( doLeft ) {
         leftEigenvectors_[i] = eigenpairs[i].second.second;
-      } else if ( doLeft ) {
-        leftEigenvectors_[i] = eigenpairs[i].second.second;
-      } else if ( doRight ) {
+      }
+      if ( doRight ) {
         rightEigenvectors_[i] = eigenpairs[i].second.first;
       }
     }
@@ -262,8 +245,10 @@ class SpectralDecomposition {
    * .
    */
   void write_eigenvalues( std::ofstream&& eigsout ) const {
-    for ( const auto& eig : eigenvalues_ ) {
-      eigsout << eig.real() << " " << eig.imag() << '\n';
+    const int N = static_cast<int>( eigenvalues_.size() );
+    for ( int i = 0; i < N; ++i ) {
+      eigsout << eigenvalues_[i].real() << " " << eigenvalues_[i].imag()
+              << '\n';
     }
   }
 
