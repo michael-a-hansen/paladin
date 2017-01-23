@@ -1,0 +1,5 @@
+%%MatrixMarket matrix coordinate complex general
+1 1 0.707107 0
+2 1 0.707107 0
+1 2 -0.707107 0
+2 2 0.707107 0

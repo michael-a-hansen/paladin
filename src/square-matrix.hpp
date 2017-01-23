@@ -26,7 +26,7 @@
 #define SRC_SQUARE_MATRIX_HPP_
 
 #include <cassert>
-#include <types.hpp>
+#include <measure-util.hpp>
 
 namespace paladin {
 
@@ -60,7 +60,7 @@ int count_nonempty_lines( const std::string& filename ) {
  */
 struct SquareMatrix {
   const int nrows_, nnz_, nelem_;
-  DVecT mat_;
+  std::vector<double> mat_;
 
   /**
    * @brief constructing a SquareMatrix and allocating storage
@@ -126,13 +126,19 @@ struct SquareMatrix {
  * @brief read the header (first line) of the matrix market exchange format
  * @param file ifstream for the matrix market file
  *
- * IMPORTANT: matrix market header must only be one line!
+ * IMPORTANT: first line of the header must be:
+ *
+ * %%MatrixMarket matrix coordinate real general
+ * or
+ * %MatrixMarket matrix coordinate real general
+ *
+ * There can be any number of comments following this first line.
  */
 void read_header( std::ifstream& file ) {
   std::string head;
   std::getline( file, head );
-  StrVecT Header = split_string( head );
-  assert( Header[0] == "MatrixMarket" || Header[0] == "%%MatrixMarket" );
+  std::vector<std::string> Header = split_string( head );
+  assert( Header[0] == "%MatrixMarket" || Header[0] == "%%MatrixMarket" );
   assert( Header[1] == "matrix" );
   assert( Header[2] == "coordinate" );
   assert( Header[3] == "real" );
@@ -150,7 +156,7 @@ void read_header( std::ifstream& file ) {
 SquareMatrix allocate_matrix( std::ifstream& file ) {
   std::string line2;
   std::getline( file, line2 );
-  StrVecT Line2 = split_string( line2 );
+  std::vector<std::string> Line2 = split_string( line2 );
 
   int nrows = std::stoi( Line2[0] );
   int nnz = std::stoi( Line2[2] );
@@ -197,7 +203,7 @@ int read_matrix_dimension_from_mm_file( const std::string& matrixPath ) {
   }
   std::getline( file, line );
 
-  StrVecT Line = split_string( line );
+  std::vector<std::string> Line = split_string( line );
   int nrows = std::stoi( Line[0] );
 
   assert( nrows == std::stoi( Line[1] ) );
@@ -222,7 +228,7 @@ int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
   }
   std::getline( file, line );
 
-  StrVecT Line = split_string( line );
+  std::vector<std::string> Line = split_string( line );
   int nnz = std::stoi( Line[2] );
   assert( Line[0] == Line[1] );
 
@@ -235,12 +241,14 @@ int read_matrix_nnzeros_from_mm_file( const std::string& matrixPath ) {
  * @param type LoadPredictor type used to estimate the matrix load
  * @result predicted load measure
  */
-MeasureT obtain_matrix_measure(
+double obtain_matrix_measure(
     const std::string& matrixPath,
     const LoadPredictor& type = LoadPredictor::DIMENSION ) {
-  MeasureT measure = 0;
-  MeasureT dim = (MeasureT)read_matrix_dimension_from_mm_file( matrixPath );
-  MeasureT nnz = (MeasureT)read_matrix_nnzeros_from_mm_file( matrixPath );
+  double measure = 0;
+  double dim =
+      static_cast<double>( read_matrix_dimension_from_mm_file( matrixPath ) );
+  double nnz =
+      static_cast<double>( read_matrix_nnzeros_from_mm_file( matrixPath ) );
   try {
     switch ( type ) {
       case LoadPredictor::DIMENSION:

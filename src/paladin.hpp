@@ -44,7 +44,6 @@
 #include <square-matrix.hpp>
 #include <sstream>
 #include <string>
-#include <types.hpp>
 #include <vector>
 
 namespace paladin {
@@ -57,13 +56,15 @@ class Paladin {
  protected:
   std::vector<std::string> allMatrixPaths, pod;
   std::vector<int> podColors;
-  std::vector<SpectrumT> spectra_;
+  std::vector<SpectralDecomposition> spectra_;
   double localRunTime_, localReadRunTime_, localEigRunTime_;
   std::string matrixListingPath_, matrixRootPath_;
   int numRuns_, numMatrices_;
   bool showPods_;
   LoadPredictor type_;
   const MpiComm& comm_;
+  bool doRight_ = false;
+  bool doLeft_ = false;
 
  public:
   Paladin( int& argc, char* argv[], const MpiComm& comm )
@@ -77,6 +78,8 @@ class Paladin {
       matrixRootPath_ = clp.getValue( "rootdir", "." );
       numRuns_ = std::stoi( clp.getValue( "repeats", "1" ) );
       showPods_ = clp.checkExists( "showdist" );
+      doRight_ = clp.checkExists( "right" );
+      doLeft_ = clp.checkExists( "left" );
       type_ = string_to_measure_type(
           std::string( clp.getValue( "measure", "nnz" ) ) );
 
@@ -91,15 +94,16 @@ class Paladin {
       bool badkeyfound = false;
       for ( const auto& k : clp.get_keys() ) {
         if ( k != "listing" && k != "repeats" && k != "showdist" &&
-             k != "measure" && k != "rootdir" ) {
+             k != "measure" && k != "rootdir" && k != "left" && k != "right" ) {
           std::cout << "\n-- POTENTIAL ERROR: key " << k
                     << " is not a recognized option!";
           badkeyfound = true;
         }
       }
       if ( badkeyfound ) {
-        std::cout << "\n-- Allowable keys: "
-                  << "matrices, repeats, showdist, measure, rootdir\n\n";
+        std::cout
+            << "\n-- Allowable keys: "
+            << "listing, repeats, showdist, measure, rootdir, left, right\n\n";
       }
 
       numMatrices_ = count_nonempty_lines( matrixListingPath_ );
@@ -126,7 +130,7 @@ class Paladin {
           break;
         }
         matrixPath = matrixRootPath_ + "/" + matrixPath;
-        MeasureT measure = obtain_matrix_measure( matrixPath, type_ );
+        double measure = obtain_matrix_measure( matrixPath, type_ );
         matrixListing.push_back( NameMeasurePairT( matrixPath, measure ) );
         allMatrixPaths.push_back( matrixPath );
       }
@@ -138,7 +142,7 @@ class Paladin {
       }
 
       // color matrices into pods
-      std::vector<MeasureT> podMeasures( comm.numRanks, 0 );
+      std::vector<double> podMeasures( comm.numRanks, 0 );
       for ( const auto& f : matrixListing ) {
         int minPodIdx = std::distance(
             podMeasures.begin(),
@@ -176,6 +180,10 @@ class Paladin {
     MPI_Bcast( &showPods_, 1, MPI_INT, 0, MPI_COMM_WORLD );
     // distribute measure type in case we show that
     MPI_Bcast( &type_, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    // distribute do left eigenvectors
+    MPI_Bcast( &doLeft_, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    // distribute do right eigenvectors
+    MPI_Bcast( &doRight_, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
     // print matrix counts per pod and maybe the pods themselves
     for ( int rank = 0; rank < comm.numRanks; ++rank ) {
@@ -184,7 +192,7 @@ class Paladin {
                   << '\n';
         if ( showPods_ ) {
           for ( const auto& p : pod ) {
-            MeasureT measure = obtain_matrix_measure( p, type_ );
+            double measure = obtain_matrix_measure( p, type_ );
             printf( "%s%0.1e%s%s\n", "    ", measure, "   ", p.c_str() );
           }
         }
@@ -202,7 +210,10 @@ class Paladin {
     localReadRunTime_ = 0.0;
     start = std::chrono::system_clock::now();
 
+    int removeme = 0;
     for ( const auto& p : pod ) {
+      std::cout << "removeme: " << removeme << '\n';
+      removeme++;
       bool firstRunOfPod = true;
       for ( int num = 0; num < numRuns_; ++num ) {
         startRead = std::chrono::system_clock::now();
@@ -211,30 +222,110 @@ class Paladin {
         std::chrono::duration<double> elapsed_seconds = endRead - startRead;
         localReadRunTime_ += elapsed_seconds.count();
 
-        SpectrumT s;
-        DVecT A = mat.mat_;
+        std::vector<double> A = mat.mat_;
         int N = mat.nrows_;
-        DVecT left, right, real( N ), imag( N ), work;
+        SpectralDecomposition spectrum( N );
+        std::vector<double> left, right, real( N ), imag( N ), work;
         int lwork, info;
         double wkopt;
-        const char nchar = 'N';
+
+        char leftchar = 'N';
+        char rightchar = 'N';
+        if ( doLeft_ ) {
+          leftchar = 'V';
+          left.reserve( N * N );
+        }
+        if ( doRight_ ) {
+          rightchar = 'V';
+          right.reserve( N * N );
+        }
 
         // first query dgeev for the optimal workspace size
         lwork = -1;
-        dgeev_( &nchar, &nchar, &N, A.data(), &N, real.data(), imag.data(),
-                left.data(), &N, right.data(), &N, &wkopt, &lwork, &info );
-        // allocate the workspace and compute the eigenvalues
-        lwork = (std::size_t)wkopt;
-        work = DVecT( lwork );
-        dgeev_( &nchar, &nchar, &N, A.data(), &N, real.data(), imag.data(),
-                left.data(), &N, right.data(), &N, work.data(), &lwork, &info );
+        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(),
+                imag.data(), left.data(), &N, right.data(), &N, &wkopt, &lwork,
+                &info );
+        // allocate the workspace and compute the decomposition
+        lwork = static_cast<std::size_t>( wkopt );
+        work = std::vector<double>( lwork );
+        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(),
+                imag.data(), left.data(), &N, right.data(), &N, work.data(),
+                &lwork, &info );
 
         if ( firstRunOfPod ) {
-          for ( int i = 0; i < N; ++i ) {
-            s.push_back( EigenvalueT( real[i], imag[i] ) );
+          bool skipNext = false;
+          for ( int i = 0; i < N - 1; ++i ) {
+            spectrum.append_eigenvalue(
+                std::complex<double>( real[i], imag[i] ) );
+            if ( !skipNext ) {
+              if ( imag[i] == -imag[i + 1] &&
+                   imag[i] != 0 ) {  // if complex conjugate pair
+                std::vector<std::complex<double> > leftComplexI( N ),
+                    rightComplexI( N ), leftComplexIp1( N ),
+                    rightComplexIp1( N );
+                if ( doLeft_ ) {
+                  for ( int j = i * N; j < i * N + N; ++j ) {
+                    leftComplexI[j - i * N] =
+                        std::complex<double>( left[j], -left[j + N] );
+                    leftComplexIp1[j - i * N] =
+                        std::complex<double>( left[j], left[j + N] );
+                  }
+                  spectrum.append_left_eigenvector( leftComplexI );
+                  spectrum.append_left_eigenvector( leftComplexIp1 );
+                }
+                if ( doRight_ ) {
+                  for ( int j = i * N; j < i * N + N; ++j ) {
+                    rightComplexI[j - i * N] =
+                        std::complex<double>( right[j], -right[j + N] );
+                    rightComplexIp1[j - i * N] =
+                        std::complex<double>( right[j], right[j + N] );
+                  }
+                  spectrum.append_right_eigenvector( rightComplexI );
+                  spectrum.append_right_eigenvector( rightComplexIp1 );
+                }
+                skipNext = true;
+              } else {  // if not complex conjugate pair
+                std::vector<std::complex<double> > leftComplex( N ),
+                    rightComplex( N );
+
+                if ( doLeft_ ) {
+                  for ( int j = i * N; j < i * N + N; ++j ) {
+                    leftComplex[j - i * N] = std::complex<double>( left[j], 0 );
+                  }
+                  spectrum.append_left_eigenvector( leftComplex );
+                }
+                if ( doRight_ ) {
+                  for ( int j = i * N; j < i * N + N; ++j ) {
+                    rightComplex[j - i * N] =
+                        std::complex<double>( right[j], 0 );
+                  }
+                  spectrum.append_right_eigenvector( rightComplex );
+                }
+                skipNext = false;
+              }
+            }
           }
-          sort_spectrum( s, "LM" );
-          spectra_.push_back( s );
+          int i = N - 1;
+          spectrum.append_eigenvalue(
+              std::complex<double>( real[i], imag[i] ) );
+          if ( !skipNext ) {
+            std::vector<std::complex<double> > leftComplex( N ),
+                rightComplex( N );
+            if ( doLeft_ ) {
+              for ( int j = i * N; j < i * N + N; ++j ) {
+                leftComplex[j - i * N] = std::complex<double>( left[j], 0 );
+              }
+              spectrum.append_left_eigenvector( leftComplex );
+            }
+            if ( doRight_ ) {
+              for ( int j = i * N; j < i * N + N; ++j ) {
+                rightComplex[j - i * N] = std::complex<double>( right[j], 0 );
+              }
+              spectrum.append_right_eigenvector( rightComplex );
+            }
+          }
+          spectrum.sort( "LM", doLeft_, doRight_ );
+          spectra_.push_back( spectrum );
         }
         firstRunOfPod = false;
       }
@@ -250,7 +341,10 @@ class Paladin {
   void write_eigenvalues() {
     int podIdx = 0;
     for ( const auto& spectrum : spectra_ ) {
-      write_spectrum( spectrum, std::ofstream( pod[podIdx] + ".spectrum" ) );
+      spectrum.write_eigenvalues( std::ofstream( pod[podIdx] + ".spectrum" ) );
+      spectrum.write_eigenvectors( std::ofstream( pod[podIdx] + ".leftvecs" ),
+                                   std::ofstream( pod[podIdx] + ".rightvecs" ),
+                                   doLeft_, doRight_ );
       ++podIdx;
     }
   }

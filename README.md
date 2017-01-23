@@ -165,7 +165,9 @@ paladin command line options must be given as `--key=value`, as seen above in th
 2. `--rootdir=[value]`: prefix to the path of the matrix files in the listing
 3. `--showdist`: add this to the command line to show the distribution of matrix files to each MPI rank
 4. `--repeats=[value]`: the number of times the decomposition is repeated. Use this if you are assessing performance and want to average the cost of the eigendecomposition over a number of runs.
-5. `--load-measure=[value]`: the measure of the matrix used for load balancing in parallel calculations. Options are below. `nnz` does a good job in most cases. If you have a large variety in matrix sizes, `dcb` may do well. For very dense matrices, I/O time is nontrivial and `nnz` should be used.
+5. `--left`: compute and write out the left eigenvectors
+6. `--right`: compute and write out the right eigenvectors
+7. `--load-measure=[value]`: the measure of the matrix used for load balancing in parallel calculations. Options are below. `nnz` does a good job in most cases. If you have a large variety in matrix sizes, `dcb` may do well. For very dense matrices, I/O time is nontrivial and `nnz` should be used.
  - `nnz`: number of nonzeros in the matrix (default load measure)
  - `dim`: dimension of the matrix (number of rows)
  - `dcb`: dimension cubed

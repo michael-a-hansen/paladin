@@ -5,7 +5,7 @@ set( HEADERS
      paladin.hpp
      spectrum-util.hpp
      square-matrix.hpp
-     types.hpp
+     measure-util.hpp
      header.hpp
      make-unique.hpp
      )

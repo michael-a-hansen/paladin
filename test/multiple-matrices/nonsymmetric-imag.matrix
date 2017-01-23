@@ -1,0 +1,7 @@
+%%MatrixMarket matrix coordinate real general
+%
+% Nonymmetric 2x2 matrix with imaginary eigenvalues
+%
+2 2 2
+1 2 -4
+2 1 1

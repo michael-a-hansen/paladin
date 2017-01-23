@@ -22,25 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SRC_TYPES_HPP_
-#define SRC_TYPES_HPP_
+#ifndef SRC_MEASURE_UTIL_HPP_
+#define SRC_MEASURE_UTIL_HPP_
 
-#include <complex>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace paladin {
 
-using DVecT = std::vector<double>;
-using StrVecT = std::vector<std::string>;
-
-using MeasureT = double;
-using NameMeasurePairT = std::pair<std::string, MeasureT>;
-
-using EigenvalueT = std::complex<double>;
-using SpectrumT = std::vector<EigenvalueT>;
+using NameMeasurePairT = std::pair<std::string, double>;
 
 /**
  * @enum LoadPredictor
@@ -129,4 +120,4 @@ void sort_name_measure_pairs( std::vector<NameMeasurePairT>& listing ) {
 
 }  // namespace paladin
 
-#endif /* SRC_TYPES_HPP_ */
+#endif /* SRC_MEASURE_UTIL_HPP_ */
