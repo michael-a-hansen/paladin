@@ -30,7 +30,7 @@ int main( int argc, char* argv[] ) {
   paladin::MpiComm comm( argc, argv );
   paladin::Paladin ferumbras( argc, argv, comm );
   ferumbras.compute();
-  ferumbras.write_eigenvalues();
+  ferumbras.write_decomposition();
   ferumbras.display_timings();
   return 0;
 }

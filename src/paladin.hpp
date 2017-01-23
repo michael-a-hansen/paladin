@@ -180,10 +180,6 @@ class Paladin {
     MPI_Bcast( &showPods_, 1, MPI_INT, 0, MPI_COMM_WORLD );
     // distribute measure type in case we show that
     MPI_Bcast( &type_, 1, MPI_INT, 0, MPI_COMM_WORLD );
-    // distribute do left eigenvectors
-    MPI_Bcast( &doLeft_, 1, MPI_INT, 0, MPI_COMM_WORLD );
-    // distribute do right eigenvectors
-    MPI_Bcast( &doRight_, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
     // print matrix counts per pod and maybe the pods themselves
     for ( int rank = 0; rank < comm.numRanks; ++rank ) {
@@ -200,6 +196,11 @@ class Paladin {
       comm.barrier();  // to get a contiguous list per pod
     }
 
+    // distribute do left eigenvectors
+    MPI_Bcast( &doLeft_, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    // distribute do right eigenvectors
+    MPI_Bcast( &doRight_, 1, MPI_INT, 0, MPI_COMM_WORLD );
+
     // distribute number of timing repeats
     MPI_Bcast( &numRuns_, 1, MPI_INT, 0, MPI_COMM_WORLD );
   }
@@ -210,10 +211,7 @@ class Paladin {
     localReadRunTime_ = 0.0;
     start = std::chrono::system_clock::now();
 
-    int removeme = 0;
     for ( const auto& p : pod ) {
-      std::cout << "removeme: " << removeme << '\n';
-      removeme++;
       bool firstRunOfPod = true;
       for ( int num = 0; num < numRuns_; ++num ) {
         startRead = std::chrono::system_clock::now();
@@ -303,6 +301,8 @@ class Paladin {
                 }
                 skipNext = false;
               }
+            } else {
+              skipNext = false;
             }
           }
           int i = N - 1;
@@ -338,13 +338,15 @@ class Paladin {
     localEigRunTime_ = localRunTime_ - localReadRunTime_;
   }
 
-  void write_eigenvalues() {
+  void write_decomposition() {
     int podIdx = 0;
     for ( const auto& spectrum : spectra_ ) {
       spectrum.write_eigenvalues( std::ofstream( pod[podIdx] + ".spectrum" ) );
-      spectrum.write_eigenvectors( std::ofstream( pod[podIdx] + ".leftvecs" ),
-                                   std::ofstream( pod[podIdx] + ".rightvecs" ),
-                                   doLeft_, doRight_ );
+      if ( doLeft_ || doRight_ ) {
+        spectrum.write_eigenvectors(
+            std::ofstream( pod[podIdx] + ".leftvecs" ),
+            std::ofstream( pod[podIdx] + ".rightvecs" ), doLeft_, doRight_ );
+      }
       ++podIdx;
     }
   }

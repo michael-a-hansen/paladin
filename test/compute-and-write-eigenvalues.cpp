@@ -30,6 +30,6 @@ int main( int argc, char* argv[] ) {
   paladin::MpiComm comm( argc, argv );
   paladin::Paladin roland( argc, argv, comm );
   roland.compute();
-  roland.write_eigenvalues();
+  roland.write_decomposition();
   return 0;
 }

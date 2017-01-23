@@ -125,7 +125,7 @@ class SpectralDecomposition {
    */
   struct LMagComplexValue : public EigenSorter {
     bool operator()( const EigenvalueT& L, const EigenvalueT& R ) const {
-      return ( std::norm( L ) > std::norm( R ) );
+      return ( std::norm( L ) < std::norm( R ) );
     }
   };
 
@@ -232,7 +232,6 @@ class SpectralDecomposition {
         leftEigenvectors_[i] = eigenpairs[i].second.second;
       } else if ( doRight ) {
         rightEigenvectors_[i] = eigenpairs[i].second.first;
-      } else {
       }
     }
   }
@@ -277,12 +276,25 @@ class SpectralDecomposition {
    */
   void write_eigenvectors( std::ofstream&& leftout,
                            std::ofstream&& rightout,
-                           bool writeLeft,
-                           bool writeRight ) const {
+                           const bool writeLeft,
+                           const bool writeRight ) const {
     const int N = static_cast<int>( eigenvalues_.size() );
-
     if ( writeLeft ) {
+      // find number of nonzeros
+      int nnzL = 0;
+      for ( int i = 0; i < N; ++i ) {
+        double maxL = std::norm( *std::max_element(
+            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(),
+            LMagComplexValue() ) );
+        for ( int j = 0; j < N; ++j ) {
+          const std::complex<double> leij = leftEigenvectors_[i][j];
+          if ( std::norm( leij ) > vectorWriteThreshold_ * maxL ) {
+            nnzL++;
+          }
+        }
+      }
       leftout << "%%MatrixMarket matrix coordinate complex general\n";
+      leftout << N << " " << N << " " << nnzL << '\n';
       // iterate through eigenvectors
       for ( int i = 0; i < N; ++i ) {
         // iterate through each eigenvector
@@ -301,7 +313,21 @@ class SpectralDecomposition {
       }
     }
     if ( writeRight ) {
+      // find number of nonzeros
+      int nnzR = 0;
+      for ( int i = 0; i < N; ++i ) {
+        double maxR = std::norm( *std::max_element(
+            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(),
+            LMagComplexValue() ) );
+        for ( int j = 0; j < N; ++j ) {
+          const std::complex<double> reij = rightEigenvectors_[i][j];
+          if ( std::norm( reij ) > vectorWriteThreshold_ * maxR ) {
+            nnzR++;
+          }
+        }
+      }
       rightout << "%%MatrixMarket matrix coordinate complex general\n";
+      rightout << N << " " << N << " " << nnzR << '\n';
       // iterate through eigenvectors
       for ( int i = 0; i < N; ++i ) {
         // iterate through each eigenvector
