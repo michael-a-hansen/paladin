@@ -18,8 +18,10 @@ vr = pp.load_rightvecs(matrixfile=matrixfile)
 w2, vl2, vr2 = la.eig(a=matrix, left=True, right=True)
 
 # print the dominant eigenpair
-print('paladin: ', w[0], ': ', vl[:, 0])
-print('scipy.linalg: ', w2[0], ': ', vl2[:, 0])
+domidx = np.argmax(np.abs(w))
+domidx2 = np.argmax(np.abs(w2))
+print('paladin: ', w[domidx], ': ', vl[:, domidx])
+print('scipy.linalg: ', w2[domidx2], ': ', vl2[:, domidx2])
 
 # plot the eigenvectors in the complex plane
 for i in np.arange(0, 20):
