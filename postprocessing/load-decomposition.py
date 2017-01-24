@@ -14,12 +14,17 @@ w = pp.load_spectrum(matrixfile=matrixfile)
 vl = pp.load_leftvecs(matrixfile=matrixfile)
 vr = pp.load_rightvecs(matrixfile=matrixfile)
 
+# get the decomposition from scipy.linalg
+w2, vl2, vr2 = la.eig(a=matrix, left=True, right=True)
+
 # print the dominant eigenpair
-print(w[0], ': ', vl[:, 0])
+print('paladin: ', w[0], ': ', vl[:, 0])
+print('scipy.linalg: ', w2[0], ': ', vl2[:, 0])
 
 # plot the eigenvectors in the complex plane
 for i in np.arange(0, 20):
-    plt.plot(np.real(vl[:, i]), np.imag(vl[:, i]))
+    plt.plot(np.real(vl[:, i]), np.imag(vl[:, i]), 'b')
+    plt.plot(np.real(vl2[:, i]), np.imag(vl2[:, i]), 'r--')
 
 plt.grid(True)
 plt.xlabel('real')

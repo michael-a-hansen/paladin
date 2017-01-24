@@ -46,66 +46,6 @@ class SpectralDecomposition {
   const double vectorWriteThreshold_ = 1.0e-3;
 
   /**
-   * @class LReal
-   * Comparator class for sorting eigenpairs by largest real part
-   */
-  struct LReal {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( L.first.real() > R.first.real() );
-    }
-  };
-
-  /**
-   * @class SReal
-   * Comparator class for sorting eigenpairs by smallest real part
-   */
-  struct SReal {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( L.first.real() < R.first.real() );
-    }
-  };
-
-  /**
-   * @class LImag
-   * Comparator class for sorting eigenpairs by largest imaginary part
-   */
-  struct LImag {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( L.first.imag() > R.first.imag() );
-    }
-  };
-
-  /**
-   * @class SImag
-   * Comparator class for sorting eigenpairs by smallest imaginary part
-   */
-  struct SImag {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( L.first.imag() < R.first.imag() );
-    }
-  };
-
-  /**
-   * @class LMag
-   * Comparator class for sorting eigenpairs by largest magnitude
-   */
-  struct LMag {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( std::norm( L.first ) > std::norm( R.first ) );
-    }
-  };
-
-  /**
-   * @class SMag
-   * Comparator class for sorting eigenpairs by smallest magnitude
-   */
-  struct SMag {
-    bool operator()( const EigenPairT& L, const EigenPairT& R ) const {
-      return ( std::norm( L.first ) < std::norm( R.first ) );
-    }
-  };
-
-  /**
    * @class LMagComplexValue
    * Comparator class for sorting complex values by largest magnitude
    */
@@ -153,66 +93,6 @@ class SpectralDecomposition {
   }
 
   /**
-   * @brief sorting a spectrum in a variety of ways
-   * @param s reference to a spectrum object which is sorted in place
-   * @param sortStr a string indicating the type of sort (see below)
-   *
-   * Sort strings:
-   * - SM: smallest magnitude
-   * - LM: largest magnitude
-   * - SR: smallest real part
-   * - LR: largest real part
-   * - SI: smallest imaginary part
-   * - LI: largest imaginary part
-   */
-  void sort( const std::string sortStr, const bool doLeft, const bool doRight ) {
-    const int N = static_cast<int>( eigenvalues_.size() );
-    std::vector<EigenPairT> eigenpairs;
-    eigenpairs.reserve( N );
-    std::vector<std::complex<double> > null( N );
-    for ( int i = 0; i < N; ++i ) {
-      if ( doLeft && doRight ) {
-        eigenpairs.push_back( std::make_pair(
-            eigenvalues_[i], std::make_pair( leftEigenvectors_[i], rightEigenvectors_[i] ) ) );
-      } else if ( doLeft ) {
-        eigenpairs.push_back(
-            std::make_pair( eigenvalues_[i], std::make_pair( leftEigenvectors_[i], null ) ) );
-      } else if ( doRight ) {
-        eigenpairs.push_back(
-            std::make_pair( eigenvalues_[i], std::make_pair( null, rightEigenvectors_[i] ) ) );
-      } else {
-        eigenpairs.push_back( std::make_pair( eigenvalues_[i], std::make_pair( null, null ) ) );
-      }
-    }
-
-    if ( sortStr == "SM" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), SMag() );
-    } else if ( sortStr == "LM" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), LMag() );
-    } else if ( sortStr == "SR" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), SReal() );
-    } else if ( sortStr == "LR" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), LReal() );
-    } else if ( sortStr == "SI" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), SImag() );
-    } else if ( sortStr == "LI" ) {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), LImag() );
-    } else {
-      std::sort( eigenpairs.begin(), eigenpairs.end(), LMag() );
-    }
-
-    for ( std::size_t i = 0; i < eigenvalues_.size(); ++i ) {
-      eigenvalues_[i] = eigenpairs[i].first;
-      if ( doLeft ) {
-        leftEigenvectors_[i] = eigenpairs[i].second.second;
-      }
-      if ( doRight ) {
-        rightEigenvectors_[i] = eigenpairs[i].second.first;
-      }
-    }
-  }
-
-  /**
    * @brief print the spectrum to stdout
    */
   void show_eigenvalues() const {
@@ -246,66 +126,70 @@ class SpectralDecomposition {
   /**
    * @brief write the eigenvectors to a file
    * @param leftout ofstream reference to the file for left eigenvectors
-   * @param rightout ofstream reference to the file for right eigenvectors
-   * @param writeLeft boolean to write the left eigenvectors
-   * @param writeRight boolean to write the right eigenvectors
    *
-   * This writes out the eigenvectors as complex matrix market format files.
+   * This writes out the eigenvectors as a matrix market format file.
    * All elements whose magnitude is within a threshold of the largest element
    * magnitude are written.
    */
-  void write_eigenvectors( std::ofstream&& leftout,
-                           std::ofstream&& rightout,
-                           const bool writeLeft,
-                           const bool writeRight ) const {
+  void write_left_eigenvectors( std::ofstream&& leftout ) const {
     const int N = static_cast<int>( eigenvalues_.size() );
-    if ( writeLeft ) {
-      int nnzL = 0;
-      for ( int i = 0; i < N; ++i ) {
-        double maxL = std::norm( *std::max_element(
-            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
-        for ( int j = 0; j < N; ++j ) {
-          const std::complex<double> leij = leftEigenvectors_[i][j];
-          if ( std::norm( leij ) > vectorWriteThreshold_ * maxL ) {
-            nnzL++;
-          }
-        }
-      }
-      leftout << "%%MatrixMarket matrix coordinate complex general\n";
-      leftout << N << " " << N << " " << nnzL << '\n';
-      for ( int i = 0; i < N; ++i ) {
-        double maxElement = std::norm( *std::max_element(
-            leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
-        for ( int j = 0; j < N; ++j ) {
-          const std::complex<double> leij = leftEigenvectors_[i][j];
-          if ( std::norm( leij ) > vectorWriteThreshold_ * maxElement ) {
-            leftout << j + 1 << " " << i + 1 << " " << leij.real() << " " << leij.imag() << '\n';
-          }
+
+    int nnzL = 0;
+    for ( int i = 0; i < N; ++i ) {
+      double maxL = std::norm( *std::max_element(
+          leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
+      for ( int j = 0; j < N; ++j ) {
+        const std::complex<double> leij = leftEigenvectors_[i][j];
+        if ( std::norm( leij ) > vectorWriteThreshold_ * maxL ) {
+          nnzL++;
         }
       }
     }
-    if ( writeRight ) {
-      int nnzR = 0;
-      for ( int i = 0; i < N; ++i ) {
-        double maxR = std::norm( *std::max_element(
-            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
-        for ( int j = 0; j < N; ++j ) {
-          const std::complex<double> reij = rightEigenvectors_[i][j];
-          if ( std::norm( reij ) > vectorWriteThreshold_ * maxR ) {
-            nnzR++;
-          }
+    leftout << "%%MatrixMarket matrix coordinate complex general\n";
+    leftout << N << " " << N << " " << nnzL << '\n';
+    for ( int i = 0; i < N; ++i ) {
+      double maxElement = std::norm( *std::max_element(
+          leftEigenvectors_[i].begin(), leftEigenvectors_[i].end(), LMagComplexValue() ) );
+      for ( int j = 0; j < N; ++j ) {
+        const std::complex<double> leij = leftEigenvectors_[i][j];
+        if ( std::norm( leij ) > vectorWriteThreshold_ * maxElement ) {
+          leftout << j + 1 << " " << i + 1 << " " << leij.real() << " " << leij.imag() << '\n';
         }
       }
-      rightout << "%%MatrixMarket matrix coordinate complex general\n";
-      rightout << N << " " << N << " " << nnzR << '\n';
-      for ( int i = 0; i < N; ++i ) {
-        double maxElement = std::norm( *std::max_element(
-            rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
-        for ( int j = 0; j < N; ++j ) {
-          const std::complex<double> reij = rightEigenvectors_[i][j];
-          if ( std::norm( reij ) > vectorWriteThreshold_ * maxElement ) {
-            rightout << j + 1 << " " << i + 1 << " " << reij.real() << " " << reij.imag() << '\n';
-          }
+    }
+  }
+
+  /**
+   * @brief write the eigenvectors to a file
+   * @param rightout ofstream reference to the file for right eigenvectors
+   *
+   * This writes out the eigenvectors as a matrix market format file.
+   * All elements whose magnitude is within a threshold of the largest element
+   * magnitude are written.
+   */
+  void write_right_eigenvectors( std::ofstream&& rightout ) const {
+    const int N = static_cast<int>( eigenvalues_.size() );
+
+    int nnzR = 0;
+    for ( int i = 0; i < N; ++i ) {
+      double maxR = std::norm( *std::max_element(
+          rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
+      for ( int j = 0; j < N; ++j ) {
+        const std::complex<double> reij = rightEigenvectors_[i][j];
+        if ( std::norm( reij ) > vectorWriteThreshold_ * maxR ) {
+          nnzR++;
+        }
+      }
+    }
+    rightout << "%%MatrixMarket matrix coordinate complex general\n";
+    rightout << N << " " << N << " " << nnzR << '\n';
+    for ( int i = 0; i < N; ++i ) {
+      double maxElement = std::norm( *std::max_element(
+          rightEigenvectors_[i].begin(), rightEigenvectors_[i].end(), LMagComplexValue() ) );
+      for ( int j = 0; j < N; ++j ) {
+        const std::complex<double> reij = rightEigenvectors_[i][j];
+        if ( std::norm( reij ) > vectorWriteThreshold_ * maxElement ) {
+          rightout << j + 1 << " " << i + 1 << " " << reij.real() << " " << reij.imag() << '\n';
         }
       }
     }

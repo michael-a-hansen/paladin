@@ -233,10 +233,10 @@ class Paladin {
         std::chrono::duration<double> elapsed_seconds = endRead - startRead;
         localReadRunTime_ += elapsed_seconds.count();
 
-        std::vector<double> A = mat.mat_;
         int N = mat.nrows_;
         SpectralDecomposition spectrum( N, vectorWriteThreshold_ );
-        std::vector<double> left, right, real( N ), imag( N ), work;
+        std::vector<double> real( N ), imag( N ), work;
+        SquareMatrix left( N, N * N ), right( N, N * N );
         int lwork, info;
         double wkopt;
 
@@ -244,62 +244,71 @@ class Paladin {
         char rightchar = 'N';
         if ( doLeft_ ) {
           leftchar = 'V';
-          left.reserve( N * N );
         }
         if ( doRight_ ) {
           rightchar = 'V';
-          right.reserve( N * N );
         }
 
         // first query dgeev for the optimal workspace size
         lwork = -1;
-        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N,
-                right.data(), &N, &wkopt, &lwork, &info );
+        dgeev_( &leftchar, &rightchar, &N, mat.mat_.data(), &N, real.data(), imag.data(),
+                left.mat_.data(), &N, right.mat_.data(), &N, &wkopt, &lwork, &info );
         // allocate the workspace and compute the decomposition
         lwork = static_cast<std::size_t>( wkopt );
         work = std::vector<double>( lwork );
-        dgeev_( &leftchar, &rightchar, &N, A.data(), &N, real.data(), imag.data(), left.data(), &N,
-                right.data(), &N, work.data(), &lwork, &info );
+        dgeev_( &leftchar, &rightchar, &N, mat.mat_.data(), &N, real.data(), imag.data(),
+                left.mat_.data(), &N, right.mat_.data(), &N, work.data(), &lwork, &info );
 
         if ( firstRunOfPod ) {
           bool skipNext = false;
-          for ( int i = 0; i < N - 1; ++i ) {
-            spectrum.append_eigenvalue( std::complex<double>( real[i], imag[i] ) );
+          for ( int colIdx = 0; colIdx < N - 1; ++colIdx ) {
+            const int j = colIdx + 1;
+            spectrum.append_eigenvalue( std::complex<double>( real[colIdx], imag[colIdx] ) );
             if ( !skipNext ) {
-              if ( imag[i] == -imag[i + 1] && imag[i] != 0 ) {  // if complex conjugate pair
-                std::vector<std::complex<double> > leftComplexI( N ), rightComplexI( N ),
-                    leftComplexIp1( N ), rightComplexIp1( N );
+              if ( imag[colIdx] == -imag[colIdx + 1] &&
+                   imag[colIdx] != 0 ) {  // if complex conjugate pair
+
                 if ( doLeft_ ) {
-                  for ( int j = i * N; j < i * N + N; ++j ) {
-                    leftComplexI[j - i * N] = std::complex<double>( left[j], -left[j + N] );
-                    leftComplexIp1[j - i * N] = std::complex<double>( left[j], left[j + N] );
+                  std::vector<std::complex<double> > leftVecI( N ), leftVecIp( N );
+                  for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                    const int i = rowIdx + 1;
+                    leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), -left.T( i, j + 1 ) );
+                    leftVecIp[rowIdx] = std::complex<double>( left.T( i, j ), left.T( i, j + 1 ) );
                   }
-                  spectrum.append_left_eigenvector( leftComplexI );
-                  spectrum.append_left_eigenvector( leftComplexIp1 );
+                  spectrum.append_left_eigenvector( leftVecI );
+                  spectrum.append_left_eigenvector( leftVecIp );
                 }
                 if ( doRight_ ) {
-                  for ( int j = i * N; j < i * N + N; ++j ) {
-                    rightComplexI[j - i * N] = std::complex<double>( right[j], -right[j + N] );
-                    rightComplexIp1[j - i * N] = std::complex<double>( right[j], right[j + N] );
+                  std::vector<std::complex<double> > rightVecI( N ), rightVecIp( N );
+                  for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                    const int i = rowIdx + 1;
+                    rightVecI[rowIdx] =
+                        std::complex<double>( right.T( i, j ), -right.T( i, j + 1 ) );
+                    rightVecIp[rowIdx] =
+                        std::complex<double>( right.T( i, j ), right.T( i, j + 1 ) );
                   }
-                  spectrum.append_right_eigenvector( rightComplexI );
-                  spectrum.append_right_eigenvector( rightComplexIp1 );
+                  spectrum.append_right_eigenvector( rightVecI );
+                  spectrum.append_right_eigenvector( rightVecIp );
                 }
                 skipNext = true;
               } else {  // if not complex conjugate pair
-                std::vector<std::complex<double> > leftComplex( N ), rightComplex( N );
+                std::vector<std::complex<double> > leftVec( N ), rightVec( N );
 
                 if ( doLeft_ ) {
-                  for ( int j = i * N; j < i * N + N; ++j ) {
-                    leftComplex[j - i * N] = std::complex<double>( left[j], 0 );
+                  std::vector<std::complex<double> > leftVecI( N );
+                  for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                    const int i = rowIdx + 1;
+                    leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), 0.0 );
                   }
-                  spectrum.append_left_eigenvector( leftComplex );
+                  spectrum.append_left_eigenvector( leftVecI );
                 }
                 if ( doRight_ ) {
-                  for ( int j = i * N; j < i * N + N; ++j ) {
-                    rightComplex[j - i * N] = std::complex<double>( right[j], 0 );
+                  std::vector<std::complex<double> > rightVecI( N );
+                  for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                    const int i = rowIdx + 1;
+                    rightVecI[rowIdx] = std::complex<double>( right.T( i, j ), 0.0 );
                   }
-                  spectrum.append_right_eigenvector( rightComplex );
+                  spectrum.append_right_eigenvector( rightVecI );
                 }
                 skipNext = false;
               }
@@ -307,24 +316,27 @@ class Paladin {
               skipNext = false;
             }
           }
-          int i = N - 1;
-          spectrum.append_eigenvalue( std::complex<double>( real[i], imag[i] ) );
+          const int colIdx = N - 1;
+          const int j = colIdx + 1;
+          spectrum.append_eigenvalue( std::complex<double>( real[colIdx], imag[colIdx] ) );
           if ( !skipNext ) {
-            std::vector<std::complex<double> > leftComplex( N ), rightComplex( N );
             if ( doLeft_ ) {
-              for ( int j = i * N; j < i * N + N; ++j ) {
-                leftComplex[j - i * N] = std::complex<double>( left[j], 0 );
+              std::vector<std::complex<double> > leftVecI( N );
+              for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                const int i = rowIdx + 1;
+                leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), 0.0 );
               }
-              spectrum.append_left_eigenvector( leftComplex );
+              spectrum.append_left_eigenvector( leftVecI );
             }
             if ( doRight_ ) {
-              for ( int j = i * N; j < i * N + N; ++j ) {
-                rightComplex[j - i * N] = std::complex<double>( right[j], 0 );
+              std::vector<std::complex<double> > rightVecI( N );
+              for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
+                const int i = rowIdx + 1;
+                rightVecI[rowIdx] = std::complex<double>( right.T( i, j ), 0.0 );
               }
-              spectrum.append_right_eigenvector( rightComplex );
+              spectrum.append_right_eigenvector( rightVecI );
             }
           }
-          spectrum.sort( eigenvalueSort_, doLeft_, doRight_ );
           spectra_.push_back( spectrum );
         }
         firstRunOfPod = false;
@@ -345,10 +357,11 @@ class Paladin {
     int podIdx = 0;
     for ( const auto& spectrum : spectra_ ) {
       spectrum.write_eigenvalues( std::ofstream( pod[podIdx] + ".spectrum" ) );
-      if ( doLeft_ || doRight_ ) {
-        spectrum.write_eigenvectors( std::ofstream( pod[podIdx] + ".leftvecs" ),
-                                     std::ofstream( pod[podIdx] + ".rightvecs" ), doLeft_,
-                                     doRight_ );
+      if ( doLeft_ ) {
+        spectrum.write_left_eigenvectors( std::ofstream( pod[podIdx] + ".leftvecs" ) );
+      }
+      if ( doRight_ ) {
+        spectrum.write_right_eigenvectors( std::ofstream( pod[podIdx] + ".rightvecs" ) );
       }
       ++podIdx;
     }

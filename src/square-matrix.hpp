@@ -80,6 +80,14 @@ struct SquareMatrix {
   double& operator()( const int i, const int j ) { return mat_[( i - 1 ) * nrows_ + ( j - 1 )]; }
 
   /**
+   * @brief accessing the ij-th element of the transpose of the square matrix
+   * @param i row index (1-based)
+   * @param j column index (1-based)
+   * @result reference to the element at the j-th row and i-th column
+   */
+  double& T( const int i, const int j ) { return mat_[( j - 1 ) * nrows_ + ( i - 1 )]; }
+
+  /**
    * @brief print the matrix to stdout in square form
    */
   void print() const {
@@ -87,6 +95,21 @@ struct SquareMatrix {
     for ( int i = 0; i < nrows_; ++i ) {
       for ( int j = 0; j < nrows_; ++j )
         std::cout << " " << mat_[i * nrows_ + j] << ",";
+      if ( i == nrows_ - 1 )
+        std::cout << " ]" << '\n';
+      else
+        std::cout << '\n';
+    }
+  }
+
+  /**
+   * @brief print the matrix transpose to stdout in square form
+   */
+  void printT() const {
+    std::cout << "[";
+    for ( int i = 0; i < nrows_; ++i ) {
+      for ( int j = 0; j < nrows_; ++j )
+        std::cout << " " << mat_[j * nrows_ + i] << ",";
       if ( i == nrows_ - 1 )
         std::cout << " ]" << '\n';
       else
