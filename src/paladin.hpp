@@ -266,8 +266,8 @@ class Paladin {
                   std::vector<std::complex<double> > leftVecI( N ), leftVecIp( N );
                   for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                     const int i = rowIdx + 1;
-                    leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), -left.T( i, j + 1 ) );
-                    leftVecIp[rowIdx] = std::complex<double>( left.T( i, j ), left.T( i, j + 1 ) );
+                    leftVecI[rowIdx] = std::complex<double>( left( i, j ), left( i, j + 1 ) );
+                    leftVecIp[rowIdx] = std::complex<double>( left( i, j ), -left( i, j + 1 ) );
                   }
                   spectrum.append_left_eigenvector( leftVecI );
                   spectrum.append_left_eigenvector( leftVecIp );
@@ -276,10 +276,8 @@ class Paladin {
                   std::vector<std::complex<double> > rightVecI( N ), rightVecIp( N );
                   for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                     const int i = rowIdx + 1;
-                    rightVecI[rowIdx] =
-                        std::complex<double>( right.T( i, j ), -right.T( i, j + 1 ) );
-                    rightVecIp[rowIdx] =
-                        std::complex<double>( right.T( i, j ), right.T( i, j + 1 ) );
+                    rightVecI[rowIdx] = std::complex<double>( right( i, j ), right( i, j + 1 ) );
+                    rightVecIp[rowIdx] = std::complex<double>( right( i, j ), -right( i, j + 1 ) );
                   }
                   spectrum.append_right_eigenvector( rightVecI );
                   spectrum.append_right_eigenvector( rightVecIp );
@@ -292,7 +290,7 @@ class Paladin {
                   std::vector<std::complex<double> > leftVecI( N );
                   for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                     const int i = rowIdx + 1;
-                    leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), 0.0 );
+                    leftVecI[rowIdx] = std::complex<double>( left( i, j ), 0.0 );
                   }
                   spectrum.append_left_eigenvector( leftVecI );
                 }
@@ -300,7 +298,7 @@ class Paladin {
                   std::vector<std::complex<double> > rightVecI( N );
                   for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                     const int i = rowIdx + 1;
-                    rightVecI[rowIdx] = std::complex<double>( right.T( i, j ), 0.0 );
+                    rightVecI[rowIdx] = std::complex<double>( right( i, j ), 0.0 );
                   }
                   spectrum.append_right_eigenvector( rightVecI );
                 }
@@ -318,7 +316,7 @@ class Paladin {
               std::vector<std::complex<double> > leftVecI( N );
               for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                 const int i = rowIdx + 1;
-                leftVecI[rowIdx] = std::complex<double>( left.T( i, j ), 0.0 );
+                leftVecI[rowIdx] = std::complex<double>( left( i, j ), 0.0 );
               }
               spectrum.append_left_eigenvector( leftVecI );
             }
@@ -326,7 +324,7 @@ class Paladin {
               std::vector<std::complex<double> > rightVecI( N );
               for ( int rowIdx = 0; rowIdx < N; ++rowIdx ) {
                 const int i = rowIdx + 1;
-                rightVecI[rowIdx] = std::complex<double>( right.T( i, j ), 0.0 );
+                rightVecI[rowIdx] = std::complex<double>( right( i, j ), 0.0 );
               }
               spectrum.append_right_eigenvector( rightVecI );
             }

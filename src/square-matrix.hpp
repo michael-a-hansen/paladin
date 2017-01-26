@@ -77,15 +77,7 @@ struct SquareMatrix {
    * @param j column index (1-based)
    * @result reference to the element at the i-th row and j-th column
    */
-  double& operator()( const int i, const int j ) { return mat_[( i - 1 ) * nrows_ + ( j - 1 )]; }
-
-  /**
-   * @brief accessing the ij-th element of the transpose of the square matrix
-   * @param i row index (1-based)
-   * @param j column index (1-based)
-   * @result reference to the element at the j-th row and i-th column
-   */
-  double& T( const int i, const int j ) { return mat_[( j - 1 ) * nrows_ + ( i - 1 )]; }
+  double& operator()( const int i, const int j ) { return mat_[( i - 1 ) + nrows_ * ( j - 1 )]; }
 
   /**
    * @brief print the matrix to stdout in square form
@@ -94,22 +86,7 @@ struct SquareMatrix {
     std::cout << "[";
     for ( int i = 0; i < nrows_; ++i ) {
       for ( int j = 0; j < nrows_; ++j )
-        std::cout << " " << mat_[i * nrows_ + j] << ",";
-      if ( i == nrows_ - 1 )
-        std::cout << " ]" << '\n';
-      else
-        std::cout << '\n';
-    }
-  }
-
-  /**
-   * @brief print the matrix transpose to stdout in square form
-   */
-  void printT() const {
-    std::cout << "[";
-    for ( int i = 0; i < nrows_; ++i ) {
-      for ( int j = 0; j < nrows_; ++j )
-        std::cout << " " << mat_[j * nrows_ + i] << ",";
+        std::cout << " " << mat_[i + nrows_ * j] << ",";
       if ( i == nrows_ - 1 )
         std::cout << " ]" << '\n';
       else
@@ -135,7 +112,7 @@ struct SquareMatrix {
       const int ii = atoi( ic );
       const int jj = atoi( jc );
       const double vv = atof( vc );
-      mat_[( ii - 1 ) * nrows_ + ( jj - 1 )] = vv;
+      mat_[( ii - 1 ) + nrows_ * ( jj - 1 )] = vv;
     }
   }
 };
