@@ -11,7 +11,8 @@ At the moment only real, general matrices written in coordinate form are support
 
 paladin has been used on the following systems and compilers:
 
-- Mac OS X, Apple LLVM version 7.0.2 (clang-700.1.81), MPI configured with gcc 4.2.1
+- Mac OS X, Apple LLVM version 7.0.2 (clang-700.1.81)
+- Mac OS X, Apple LLVM version 8.0.0 (clang-800.0.42.1)
 - gcc 4.7.2 and openmpi 1.6.4 on a Red Hat 6 workstation
 - Intel 14.0 and openmpi 1.6.4 on the NNSA Tri-Lab Linux capacity clusters (note: the `std=c++11` flag must be explicitly added here...).
 
